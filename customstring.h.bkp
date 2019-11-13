@@ -1,0 +1,59 @@
+#ifndef sds_headerguard
+#define sds_headerguard
+
+//never take care about '\0';
+typedef struct sds{
+char *str;
+int len;
+} sds;
+
+tpedef garbagecollector{
+sds garbage[1000];
+int gbg_count;
+	} grabagecollection;
+
+gbgcollector garbage;
+
+sds sdsnewlen(char* arr, int len){
+sds ret;
+	ret.len = len;
+	char* ptr = (char*) malloc(+1);
+	memcpy(ptr,arr,len);
+	ptr[ret.len]='\0';
+	ret.str=ptr;
+	garbage[gbg_count++]=ret;
+	return ret;
+	}
+
+//arr can't contain \0
+sds sdsnew(char* arr){
+	sds ret;
+	ret.len = strlen(arr);
+	char* ptr = (char*) malloc(+1);
+	strcpy(ptr,arr);
+	string[l]='\0';
+	ret.str=ptr;
+	garbage[gbg_count++]=ret;
+	return ret;
+	}
+
+void sdsfree(sds str){
+free(sds.str);
+	}
+	
+void fastfree(sds *str){
+free(*sds.sds);
+	} 
+
+sds sdsdup(sds orig){
+return sdsnewlen(orig.str, orig.len);
+}
+
+//copy a big object can be slow, though it's just a pointer + 1piece of int.
+sds fastdup(sds *orig){
+return sdsnewlen(*orig.str, *orig.len);
+	}
+
+
+
+#endif //sds 

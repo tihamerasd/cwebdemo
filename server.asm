@@ -19,7 +19,7 @@ endstruc
 section .bss
     sock resw 2
     client resw 2
-    echobuf resb 1024000
+    echobuf resb 2048
     read_count resw 2
 
 section .data
@@ -44,7 +44,7 @@ section .data
     ;; sockaddr_in structure for the address the listening socket binds to
     pop_sa istruc sockaddr_in
         at sockaddr_in.sin_family, dw 2            ; AF_INET
-        at sockaddr_in.sin_port, dw 0x901f        ; port 8080
+        at sockaddr_in.sin_port, dw 0x921f        ; port 8080
         at sockaddr_in.sin_addr, dd 0             ; localhost
         at sockaddr_in.sin_zero, dd 0, 0
     iend
@@ -153,18 +153,18 @@ _accept:
 
     ret
 
-;; Reads up to 256 bytes from the client into echobuf and sets the read_count variable
+;; Reads up to 2048 bytes from the client into echobuf and sets the read_count variable
 ;; to be the number of bytes read by sys_read
 _read:
     ;; Call sys_read
     mov     rax, 0          ; SYS_READ
     mov     rdi, [client]   ; client socket fd
     mov     rsi, echobuf    ; buffer
-    mov     rdx, 1024000       ; read 1024 bytes 
+    mov     rdx, 2048       ; read 2048 bytes 
     syscall 
 
     ;; Copy number of bytes read to variable
-    mov     [read_count], rax
+    ;mov     [read_count], rax
     ret 
 
 ;; Sends up to the value of http body to the client socket

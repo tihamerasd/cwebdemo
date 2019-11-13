@@ -4,44 +4,38 @@
 
 
 void print_http_req(http_request hr){
-	printf("%s %s %s\n", hr.req_type, hr.url, hr.http_version);
-	//for (int i=0; i<=hr.req_headers_count; i++){
-	//	printf("%s: %s\n", hr.req_headers[i].key, hr.req_headers[i].value);
-	//	}
+	printf("req_header:%s %s %s\n", hr.req_type, hr.url, hr.http_version);
 	}
-http_request create_request(char* raw_req){
+http_request create_request(sds raw_req){
 
+	
 	http_request hrq;
-	char delim[] = " \r";
-	char *ptr = strtok(raw_req, delim);
+	sds *tokens, *firstlinetokens;
+	int count, j, count2;
+	sdstrim(raw_req,"\r");
 
-	if(strlen(ptr)<10) {strcpy(hrq.req_type, ptr); hrq.req_type_count=strlen(ptr);}
-	else {strcpy(hrq.req_type,"OVERFLOW"); hrq.req_type_count=8;}
-	ptr = strtok(NULL, delim);
+	sds firstline =sdssplitnth(raw_req, sdslen(raw_req), "\n", 1, &count, 0);
+	while (count<3) firstline = sdscat(firstline," badhacker"); 
+	
+	//printf("%s\n",firstline);
+	//tokens = sdssplitlen(raw_req,sdslen(raw_req),"\n",1,&count);
+	//sds firstline=sdsdup(tokens[0]);
 
-	if(strlen(ptr)<300) {strcpy(hrq.url, ptr); hrq.url_count=strlen(ptr);}
-	else {strcpy(hrq.url,"OVERFLOW"); hrq.req_type_count=8;}
-	strcpy(hrq.url, ptr);
-	ptr = strtok(NULL, delim);
 
-	if(strlen(ptr)<20) {strcpy(hrq.http_version, ptr); hrq.http_version_count=strlen(ptr);}
-	else {strcpy(hrq.url,"OVERFLOW"); hrq.req_type_count=8;}
-	strcpy(hrq.http_version, ptr);
-	ptr = strtok(NULL, delim);
+	//firstlinetokens = sdssplitlen(firstline,sdslen(firstline)," ",1,&count2);
+	//printf("returnlen:%d\nurlfail:%s\n", count2,raw_req);
+	hrq.req_type = sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 0);
+	hrq.url = sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 1);
+	hrq.http_version=sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 2);
 
+	
+		//sds otherline=sdsempty();
+    // TODO HEADERS tokens[j]);
+
+	//for (j = 3; j < count2; j++)sdsfree(firstlinetokens[j]);
+	//free(firstlinetokens);
+	//sdsfreesplitres(tokens,count);
+	sdsfree(firstline);
+	//sdsfreesplitres(firstlinetokens,count2);
 	return hrq;
-	/*
-	delim[0] = "\r";
-
-	while (strlen(ptr) != 1 && ptr != NULL)
-	{
-		keyvaluepair kvp = create_keyvalue_from_header(ptr);
-		hrq.req_headers[hrq.req_headers_count++]= kvp;
-		ptr = strtok(NULL, delim);
-	}
-
-	//TODO http body missing from here, it's enough to test
-
-	return hrq;
-	*/
 	}

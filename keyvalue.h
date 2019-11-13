@@ -7,14 +7,13 @@
 #include "sds.h"
 
 typedef struct keyvaluepair{
-char key[50];
-char value[300];
-int key_len;
-int value_len;
+sds key;
+sds value;
 } keyvaluepair;
 
-keyvaluepair create_keyvaluepair(char*, char*);
-char* get_value_by_key(char*);
-keyvaluepair create_keyvalue_from_header(char*);
+keyvaluepair create_keyvaluepair(sds, sds);
+sds get_value_by_key(sds);
+keyvaluepair create_keyvalue_from_header(sds);
 
+sds sdssplitnth(sds, int, char*, int,  int*, int );
 #endif //keyvalue_H

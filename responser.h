@@ -4,12 +4,10 @@
 #include "keyvalue.h"
 #include "requester.h"
 
-typedef char* (*FUNC_PTR)(http_request*);
+typedef sds (*FUNC_PTR)(http_request*);
 
-//ADDING YOUR ROUTES HERE
-//100 max right now 
 typedef struct route{
-char url[300];
+sds url;
 void* funcref; //pointers for
 } route;
 
@@ -21,7 +19,7 @@ int route_count;
 routing_table table;
 
 typedef struct http_response{
-char http_version[20];
+sds http_version;
 keyvaluepair response_code_plus_name; //200 OK or 404 Not found eg.
 keyvaluepair resp_headers[100];
 sds resp_body; //the html code... probably it should be malloc-ed dynamically, or just split to the buffer on real time and don't store at all
@@ -37,11 +35,12 @@ keyvaluepair inernalerrkvp;
 
 //... set values ...
 
-char* resp_headerify(keyvaluepair*); //pointer will be faster than a real copy
-char* resp_bodyfy(keyvaluepair);
-int check_route(char*);
-char* do_route(http_request*);
-void create_route(char* url, FUNC_PTR);
-char* build_response(http_response);
+sds resp_headerify(keyvaluepair*); //pointer will be faster than a real copy
+sds resp_bodyfy(keyvaluepair);
+int check_route(sds);
+sds do_route(http_request*);
+void create_route(sds url, FUNC_PTR);
+sds build_response(http_response);
+sds build_response_header(http_request);
 
 #endif //responser_H
