@@ -18,8 +18,8 @@ int  j;
 
 tokens = sdssplitlen(l,sdslen(l),exp,1,count);
 
-for (j = 0; j < *count; j++)
-    printf("%s\n", tokens[j]);
+//for (j = 0; j < *count; j++)
+    //printf("%s\n", tokens[j]);
 sds ret = sdsdup(tokens[nth]);
 sdsfreesplitres(tokens,*count);
 return ret;

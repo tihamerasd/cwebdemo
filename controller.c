@@ -23,27 +23,40 @@ sds initdir_for_static_files(sds url){
 	fullpath = sdscatsds(fullpath,url);
 	//printf("%s\n",fullpath);
     int c, size;
-    sds *tokens;
+    sds paramtrimm;
 	int count, j;
-	tokens = sdssplitlen(fullpath,sdslen(fullpath),"?",1,&count);
+	paramtrimm = sdssplitnth(fullpath,sdslen(fullpath),"?",1,&count,0);
 	sdsfree(fullpath);
-	FILE* f = fopen(tokens[0], "rb");
+	FILE* f = fopen(paramtrimm, "rb");
 	if (f == NULL)
    {
       //perror("Error while opening the file.\n");
-	   sdsfreesplitres(tokens,count);
+	   //sdsfreesplitres(tokens,count);
+	   sdsfree(paramtrimm);
        return sdsnew("It's place for 404!"); 
    }
 
-	printf("splittedpath: %s\n", tokens[0]);
-    //TODO file inclusion here...
-	f = fopen(tokens[0], "rb");
-	sds s = sdsempty();
-	while((c = fgetc(f)) != EOF){
-		s=sdscatlen(s, &c, 1);
-		}
+	printf("splittedpath: %s\n", paramtrimm);
+    //TODO file inclusion here... this solution not works
+    if(strstr(paramtrimm, "../") == 0){paramtrimm=sdstrim(paramtrimm,".");}
+	f = fopen(paramtrimm, "rb");
+	fseek(f, 0, SEEK_END);				//seek to the end of the tfile
+	int file_size = ftell(f);				//get the byte offset of the pointer(the size of the file)
+	fseek(f, 0, SEEK_SET);				//go back
+	//sds s = sdsempty();
+	char* data_file;
+	data_file = (char *)malloc(file_size + 1);	//Little bit overkill
+	fread(data_file, 1,file_size, f); //read
+	data_file[file_size] = '\0';
+	sds s = sdsnewlen(data_file,file_size);
+	free(data_file);
+	//sds s = sdsempty();
+	//while((c = fgetc(f)) != EOF){
+	//	s=sdscatlen(s, &c, 1);
+	//	}
 	fclose(f);
-	sdsfreesplitres(tokens,count);
+	//sdsfreesplitres(tokens,count);
+	sdsfree(paramtrimm);
 	return s;
 }
 
