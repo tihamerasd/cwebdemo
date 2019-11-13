@@ -1,7 +1,10 @@
 #include "keyvalue.h"
 
-keyvaluepair create_keyvaluepair(sds key, sds value){
+keyvaluepair create_keyvaluepair(){
 	keyvaluepair kvp;
+	kvp.key=sdsempty();
+	kvp.value=sdsempty();
+	
 	return kvp;
 	}
 

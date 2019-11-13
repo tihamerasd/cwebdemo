@@ -6,6 +6,16 @@
 
 typedef sds (*FUNC_PTR)(http_request*);
 
+typedef struct Cache{
+keyvaluepair cachedpages[100]; 
+int counter;
+} Cache;
+
+Cache cache;
+
+void globalinit_cache(void);
+void globalfree_cache(void);
+
 typedef struct route{
 sds url;
 void* funcref; //pointers for

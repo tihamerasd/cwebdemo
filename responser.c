@@ -27,6 +27,19 @@ sds do_route(http_request *hrq){
 	return sdsnew("404 NOT FOUND");
 }
 
+void globalinit_cache(void){
+	for (int i=0; i<100; i++){
+	cache.cachedpages[i]=create_keyvaluepair();
+	}
+}
+
+void globalfree_cache(void){
+for (int i=0; i<100; i++){
+	sdsfree(cache.cachedpages[i].key);
+	sdsfree(cache.cachedpages[i].value);
+	}
+}
+
 sds build_response_header(http_request req){
 	sds *tokens, *tokens2, backsplit;
 	int count, j, count2;

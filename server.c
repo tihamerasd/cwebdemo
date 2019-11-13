@@ -11,21 +11,25 @@ typedef struct th_arg {
     pthread_t* th_num;
 } th_arg;
 
+//int is_main(void)
+//{
+//  return getpid() == gettid();
+//}
+
 void  INThandler(int sig)
 {
      char  c;
-
+	//if (is_main){
      signal(sig, SIG_IGN);
-     printf("OUCH, did you hit Ctrl-C?\n"
-            "Do you really want to quit? [y/n] ");
+     printf("You hitted Ctrl-C\n");
      c = getchar();
-     if (c == 'y' || c == 'Y'){
+     //if (c == 'y' || c == 'Y'){
 		for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
-          _exit(0);
-          }
-     else
-          signal(SIGINT, INThandler);
+		  globalfree_cache();
+          system("fuser -k 8082/tcp"); //TODO not a clear shutdown...should kill all thread  with kill syscall
+      //    }
      getchar(); // Get new line character
+     //}
 }
 void test_responser(http_request hrq){
 	
@@ -82,7 +86,7 @@ void *threadjob(void* p){
 	}
 #define THREADNUMBER 100
 int main(){
-
+	printf("%s\n", "Server run on 8082");
 	pthread_t threads[THREADNUMBER]; //100 posible threads, just to be safe
 	int thread_count = 0;
 	int connfd[THREADNUMBER];
@@ -97,31 +101,32 @@ int main(){
 
 	//init the routes from the controller.c
 	controllercall();
+	globalinit_cache();
 	while(1){
-		_accept();
-		http_request req = test_requester();
-		test_responser(req);
-		sdsfree(req.req_type);
-		sdsfree(req.url);
-		sdsfree(req.http_version);
-		closesock();
-	//while(thread_count<THREADNUMBER){
-	//	if (thread_done[thread_count]!=-1){connfd[thread_count]--; continue; }; //skip long processes 
-	//	if (thread_done[thread_count]==-2) pthread_join(threads[thread_count], NULL); // kill if the long process still run
-	//	connfd[thread_count]=_accept();
+		//_accept();
+		//http_request req = test_requester();
+		//test_responser(req);
+		//sdsfree(req.req_type);
+		//sdsfree(req.url);
+		//sdsfree(req.http_version);
+		//closesock();
+	while(thread_count<THREADNUMBER){
+		if (thread_done[thread_count]!=-1){connfd[thread_count]--; continue; }; //skip long processes 
+		if (thread_done[thread_count]==-2) pthread_join(threads[thread_count], NULL); // kill if the long process still run
+		connfd[thread_count]=_accept();
 
-	//	th_arg tharg;
-	//	tharg.th_done=&thread_done[thread_count];
-	//	tharg.th_num=&threads[thread_count];
+		th_arg tharg;
+		tharg.th_done=&thread_done[thread_count];
+		tharg.th_num=&threads[thread_count];
 
-	//	pthread_create(&threads[thread_count], NULL, threadjob,
-	//				   &tharg);		//create a thread and receive data
-	//	pthread_join(threads[thread_count], NULL);   //join the finished thread and continue
-	//	thread_count++;
-	//	printf("thread_count:%d\n",thread_count);
-	//}
+		pthread_create(&threads[thread_count], NULL, threadjob,
+					   &tharg);		//create a thread and receive data
+		pthread_join(threads[thread_count], NULL);   //join the finished thread and continue
+		thread_count++;
+		printf("thread_count:%d\n",thread_count);
+	}
 	
-	//thread_count=0;
+	thread_count=0;
 	}
 }
 	return 0;

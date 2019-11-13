@@ -27,37 +27,40 @@ sds initdir_for_static_files(sds url){
 	int count, j;
 	paramtrimm = sdssplitnth(fullpath,sdslen(fullpath),"?",1,&count,0);
 	sdsfree(fullpath);
-	FILE* f = fopen(paramtrimm, "rb");
-	if (f == NULL)
-   {
-      //perror("Error while opening the file.\n");
-	   //sdsfreesplitres(tokens,count);
-	   sdsfree(paramtrimm);
-       return sdsnew("It's place for 404!"); 
-   }
 
-	printf("splittedpath: %s\n", paramtrimm);
-    //TODO file inclusion here... this solution not works
-    if(strstr(paramtrimm, "../") == 0){paramtrimm=sdstrim(paramtrimm,".");}
-	f = fopen(paramtrimm, "rb");
-	fseek(f, 0, SEEK_END);				//seek to the end of the tfile
-	int file_size = ftell(f);				//get the byte offset of the pointer(the size of the file)
-	fseek(f, 0, SEEK_SET);				//go back
-	//sds s = sdsempty();
-	char* data_file;
-	data_file = (char *)malloc(file_size + 1);	//Little bit overkill
-	fread(data_file, 1,file_size, f); //read
-	data_file[file_size] = '\0';
-	sds s = sdsnewlen(data_file,file_size);
-	free(data_file);
-	//sds s = sdsempty();
-	//while((c = fgetc(f)) != EOF){
-	//	s=sdscatlen(s, &c, 1);
-	//	}
-	fclose(f);
-	//sdsfreesplitres(tokens,count);
-	sdsfree(paramtrimm);
-	return s;
+//looking for cache
+	for(int i=0; i<100; i++){
+		if (sdscmp(cache.cachedpages[i].key,paramtrimm)==0){
+			printf("%s\n","Served from cache");
+			return sdsdup(cache.cachedpages[i].value);
+		}
+	}
+
+		FILE* f = fopen(paramtrimm, "rb");
+		if (f == NULL)
+			{
+			//perror("Error while opening the file.\n");
+			//sdsfreesplitres(tokens,count);
+			sdsfree(paramtrimm);
+			return sdsnew("It's place for 404!"); 
+			}
+
+		printf("splittedpath: %s\n", paramtrimm);
+		sds s = sdsempty();
+		while((c = fgetc(f)) != EOF){
+			s=sdscatlen(s, &c, 1);
+		}
+		fclose(f);
+		keyvaluepair cachelog;
+		cachelog.key=sdsdup(paramtrimm);
+		cachelog.value=sdsdup(s);
+		sdsfree(cache.cachedpages[cache.counter].key);
+		sdsfree(cache.cachedpages[cache.counter].value);
+		cache.cachedpages[cache.counter++]=cachelog;
+		if (cache.counter>100) cache.counter=0;
+		sdsfree(paramtrimm);
+		return s;
+		
 }
 
 void controllercall(){
