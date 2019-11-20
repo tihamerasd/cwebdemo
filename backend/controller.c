@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <ctype.h>
+#include "html_templater/flate.h"
 
 #define ROOTPATH "frontend/"
 
@@ -16,7 +17,31 @@ return a=sdscat(a,hrq->url);
 	}
 sds adminroute(http_request* hrq){
 	printf("%s\n", "admin route called");
-	return sdsnew("Hello, it's not ready admin page.");
+	Flate *f = NULL;
+    flateSetFile(&f, "frontend/templates/temp.html");
+	flateSetVar(f, "titlezone", "");
+	flateSetVar(f, "title", "DYNAMIC");
+
+	if(0) flateSetVar(f, "arch", "");
+	else  flateSetVar(f, "steampunk", "");
+	
+	flateSetVar(f, "urlsource", "/asd");
+	flateSetVar(f, "listelem", "first elem");
+	flateDumpTableLine(f, "ullist");
+
+	flateSetVar(f, "urlsource", "/nope");
+	flateSetVar(f, "listelem", "second elem");
+	flateDumpTableLine(f, "ullist");
+
+	flateSetVar(f, "urlsource", "/admin");
+	flateSetVar(f, "listelem", "third elem");
+	flateDumpTableLine(f, "ullist");
+
+	char *buf = flatePage(f);
+	sds dynpage =sdsnew(buf);
+	free(buf);
+	flateFreeMem(f);
+	return dynpage;
 	}
 
 
