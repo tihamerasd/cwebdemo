@@ -1,8 +1,8 @@
 /*made by Tihamer Darai*/
-#include "keyvalue.h"
-#include "requester.h"
-#include "responser.h"
-#include "controller.c"
+#include "./backend/keyvalue.h"
+#include "./backend/requester.h"
+#include "./backend/responser.h"
+#include "./backend/controller.c"
 #include <signal.h>
 #include <pthread.h>
 
@@ -49,6 +49,16 @@ response_header = sdscatsds(response_header,response);
 	 sdsfree(response);
 }
 
+/*http_request portable_requester(char* req){
+	sds req_str=sdsempty();
+	req_str=sdscatlen(req_str,req, strlen(req));
+
+	http_request req = create_request(req_str);
+	sdsfree(req_str);
+	return req;
+	//TODO if length is over than we got the result is DOS
+		}
+*/
 http_request test_requester(void){
 	sds req_str=sdsempty();
 	register char* raw_http_request asm("rsi");
@@ -69,10 +79,11 @@ void *threadjob(void* p){
 	int *done=thargptr->th_done;
 
 	//TODO multithread is useless because of this lock, we need to lock just write and read
-	pthread_mutex_lock(&mutex);
+	//TODO I gues it should crash without lock, but I can't do this.
+	//pthread_mutex_lock(&mutex);
 	http_request req = test_requester();
 	test_responser(req);
-	pthread_mutex_unlock(&mutex);
+	//pthread_mutex_unlock(&mutex);
 
 	sdsfree(req.req_type);
 	sdsfree(req.url);
@@ -93,6 +104,7 @@ int main(){
 	int thread_done[THREADNUMBER];
 	for (int i=0; i<THREADNUMBER; i++)thread_done[i] = -1; // -1 means task ended successfully
 	signal(SIGINT, INThandler);
+	signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
 	while (1) {
 	
 	extern int server_asm();

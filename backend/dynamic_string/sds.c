@@ -141,6 +141,12 @@ sds sdsnewlen(const void *init, size_t initlen) {
     if (initlen && init)
         memcpy(s, init, initlen);
     s[initlen] = '\0';
+
+//CUSTOM CODE for typical http value sizes;
+//probably cause memleak
+//if (sdslen(s)<80) s = sdsMakeRoomFor(s, 80);
+//if (sdslen(s)<1000) s = sdsMakeRoomFor(s, 1000);
+//if (sdslen(s)<5000) s = sdsMakeRoomFor(s, 5000);   
     return s;
 }
 

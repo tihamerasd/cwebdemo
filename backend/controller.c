@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <ctype.h>
 
+#define ROOTPATH "frontend/"
+
 //Maybe routes should be sds too, i have some speed issue with sds
 sds asdroute(http_request* hrq){
 	printf("%s\n", "The ASD route called");
@@ -19,7 +21,9 @@ sds adminroute(http_request* hrq){
 
 
 sds initdir_for_static_files(sds url){
-	sds fullpath = sdsnew("/home/tihi/cweb"); // THIS is webroot, don't keep secure things here...
+	printf("%s\n", url);
+	for (int traversal=0; traversal< sdslen(url)-1;traversal++){ if (url[traversal]==url[traversal+1] && url[traversal]=='.') return sdsnew("Go away hacker, path traversal detected!");}
+	sds fullpath = sdsnew(ROOTPATH); // THIS is webroot, don't keep secure things here...
 	fullpath = sdscatsds(fullpath,url);
 	//printf("%s\n",fullpath);
     int c, size;
@@ -63,11 +67,21 @@ sds initdir_for_static_files(sds url){
 		
 }
 
+sds rootroute(http_request* hrq){
+	printf("%s\n", "root route called");
+	sds index = sdsnew("/index.html");
+	return initdir_for_static_files(index);
+	//return sdsnew("<h1>This Works!</h1><br><p>Congrats! You installed the server.</p>");
+	}
+
 void controllercall(){
 	sds first = sdsnew("/asd");
 	sds sec = sdsnew("/admin");
+	sds root = sdsnew("/");
 	create_route(first, &asdroute);
 	create_route(sec, &adminroute);
+	create_route(root, &rootroute);
 	sdsfree(first);
 	sdsfree(sec);
+	sdsfree(root);
 }

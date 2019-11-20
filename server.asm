@@ -44,7 +44,8 @@ section .data
     ;; sockaddr_in structure for the address the listening socket binds to
     pop_sa istruc sockaddr_in
         at sockaddr_in.sin_family, dw 2            ; AF_INET
-        at sockaddr_in.sin_port, dw 0x921f        ; port 8080
+        ;at sockaddr_in.sin_port, dw 0x921f        ; port 8080
+        at sockaddr_in.sin_port, dw 0x31d4        ; port 54321
         at sockaddr_in.sin_addr, dd 0             ; localhost
         at sockaddr_in.sin_zero, dd 0, 0
     iend
