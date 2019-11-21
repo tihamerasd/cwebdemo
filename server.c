@@ -26,7 +26,7 @@ void  INThandler(int sig)
      //if (c == 'y' || c == 'Y'){
 		for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
 		  globalfree_cache();
-          system("fuser -k 8082/tcp"); //TODO not a clear shutdown...should kill all thread  with kill syscall
+          //system("fuser -k 54321/tcp"); //TODO not a clear shutdown...should kill all thread  with kill syscall
       //    }
      getchar(); // Get new line character
      //}
@@ -61,10 +61,18 @@ response_header = sdscatsds(response_header,response);
 */
 http_request test_requester(void){
 	sds req_str=sdsempty();
-	register char* raw_http_request asm("rsi");
-	register int   raw_req_len asm("rdx");
-	_read();
-	req_str=sdscatlen(req_str,raw_http_request, raw_req_len);
+	char* raw_http_request[2048];
+	give_me_socket();
+	register int   mysocket asm("rdi");
+
+	int siz = read(mysocket, raw_http_request, 2048);
+
+	//register char* raw_http_request asm("rsi");
+	//register int   raw_req_len asm("rdx");
+	//int len=_read();
+	req_str=sdscatlen(req_str,raw_http_request, siz);
+	//printf("raw req begin:\n%s\nraw req end\n", req_str);
+	memset(raw_http_request, 0, 2048);
 
 	http_request req = create_request(req_str);
 	sdsfree(req_str);
@@ -80,24 +88,22 @@ void *threadjob(void* p){
 
 	//TODO multithread is useless because of this lock, we need to lock just write and read
 	//TODO I gues it should crash without lock, but I can't do this.
-	//pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex);
 	http_request req = test_requester();
 	test_responser(req);
-	//pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex);
 
-	sdsfree(req.req_type);
-	sdsfree(req.url);
-	sdsfree(req.http_version);
+	requestfree(req);
 	
 	closesock();
 	*done = -1;
-	close(*connfd_thread);
+	//close(*connfd_thread);
 	//fflush(stdout);
 	pthread_exit(NULL);
 	}
 #define THREADNUMBER 100
 int main(){
-	printf("%s\n", "Server run on 8082");
+	printf("%s\n", "Server run on 54321");
 	pthread_t threads[THREADNUMBER]; //100 posible threads, just to be safe
 	int thread_count = 0;
 	int connfd[THREADNUMBER];

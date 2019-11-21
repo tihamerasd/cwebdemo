@@ -1,10 +1,9 @@
-;; created by Tihamer Darai
-;; Web server engine based on linux syscall, the main is in the c source
-;;nasm -felf64 -o server.o server.asm
-;;ld server.o -o server
-;;My job is based on this github project: https://gist.github.com/bobbo/e1e980262f2ddc8db3b8
-
-;;TODO move the .bss and .data section to c for PIE compile
+;; Simple TCP echo server in x86_64 assembly, using Linux syscalls
+;;
+;;         nasm -felf64 -o server.o server.asm
+;;        ld server.o -o server
+;;         ./server
+;;
 
 global _start
 
@@ -19,7 +18,7 @@ endstruc
 section .bss
     sock resw 2
     client resw 2
-    echobuf resb 2048
+    echobuf resb 256
     read_count resw 2
 
 section .data
@@ -44,8 +43,7 @@ section .data
     ;; sockaddr_in structure for the address the listening socket binds to
     pop_sa istruc sockaddr_in
         at sockaddr_in.sin_family, dw 2            ; AF_INET
-        ;at sockaddr_in.sin_port, dw 0x921f        ; port 8080
-        at sockaddr_in.sin_port, dw 0x31d4        ; port 54321
+        at sockaddr_in.sin_port, dw 0x5000        ; port 80
         at sockaddr_in.sin_addr, dd 0             ; localhost
         at sockaddr_in.sin_zero, dd 0, 0
     iend
@@ -53,49 +51,36 @@ section .data
 
 section .text
 
-GLOBAL _socket
-GLOBAL _accept
-GLOBAL _accept_fail
-GLOBAL _close_sock
-GLOBAL _echo
-GLOBAL _echo_header
-GLOBAL _exit
-GLOBAL _fail
-GLOBAL _listen
-GLOBAL _listen_fail
-GLOBAL _read
-GLOBAL _socket_fail
-GLOBAL initcode
-GLOBAL closesock
-GLOBAL client_to_rdi
-GLOBAL give_me_socket
+;; Main entry point for the server.
+_start:
+    ;; Initialise listening and client socket values to 0, used for cleanup handling
+    mov      word [sock], 0
+    mov      word [client], 0
 
-give_me_socket:
-	mov     rdi, [client]
+    ;; Initialize socket
+    call     _socket
 
-client_to_rdi:
-	mov		rax, 1
-	mov     rdi, [client]
-	syscall
-	ret
+    ;; Bind and Listen
+    call     _listen
 
-initcode:
-	mov      word [sock], 0
-	mov      word [client], 0
-	jmp _socket
+    ;; Main loop handles clients connecting (accept()) then echoes any input
+    ;; back to the client
+    .mainloop:
+        call     _accept
 
-; It's for the correct close after response
-closesock:
-	mov    rdi, [client]
-	mov     rax, 3        ; SYS_CLOSE
-    syscall
-	mov    word [client], 0
+		call _read
+        ;; Response with static content
+            call     _echo_header
+	    call     _echo
+	    call _echo_query
+	    ;mov    rdi, [client]
+            call    _close_sock
+            ;mov    word [client], 0
+    jmp    .mainloop
 
-; It's a close on error; TODO maybe we could do it better
-_close_sock:
-	mov     rax, 3        ; SYS_CLOSE
-    syscall
-	ret
+    ;; Exit with success (return 0)
+    mov     rdi, 0
+    call     _exit
 
 ;; Performs a sys_socket call to initialise a TCP/IP listening socket, storing 
 ;; socket file descriptor in the sock variable
@@ -135,13 +120,12 @@ _listen:
     ;; Check for success
     cmp        rax, 0
     jl         _listen_fail
-	
+
     ret
 
 ;; Accepts a connection from a client, storing the client socket file descriptor
 ;; in the client variable and logging the connection to stdout
 _accept:
-   
     ;; Call sys_accept
     mov       rax, 43         ; SYS_ACCEPT
     mov       rdi, [sock]     ; listening socket fd
@@ -156,20 +140,28 @@ _accept:
     ;; Store returned fd in variable
     mov     [client], rax
 
+    ;; Log connection to stdout
+    mov       rax, 1             ; SYS_WRITE
+    mov       rdi, 1             ; STDOUT
+    mov       rsi, accept_msg
+    mov       rdx, accept_msg_len
+    syscall
+
     ret
 
-;; Reads up to 2048 bytes from the client into echobuf and sets the read_count variable
+;; Reads up to 256 bytes from the client into echobuf and sets the read_count variable
 ;; to be the number of bytes read by sys_read
 _read:
     ;; Call sys_read
     mov     rax, 0          ; SYS_READ
     mov     rdi, [client]   ; client socket fd
     mov     rsi, echobuf    ; buffer
-    mov     rdx, 2048       ; read 2048 bytes 
+    mov     rdx, 1024        ; read 1024 bytes 
     syscall 
 
     ;; Copy number of bytes read to variable
-    ;mov     [read_count], rax
+    mov     [read_count], rax
+
     ret 
 
 ;; Sends up to the value of http body to the client socket
@@ -190,6 +182,23 @@ _echo_header:
     mov     rdi, [client]        ; client socket fd
     mov     rsi, response_header         ; buffer
     mov     rdx, response_header_len    ; number of bytes received in _read
+    syscall
+
+    ret
+
+_echo_query:
+    mov     rax, 1               ; SYS_WRITE
+    mov     rdi, [client]        ; client socket fd
+    mov     rsi, echobuf         ; buffer
+    mov     rdx, 60000  ; number of bytes received in _read
+    syscall
+
+    ret
+
+
+;; Performs sys_close on the socket in rdi
+_close_sock:
+    mov     rax, 3        ; SYS_CLOSE
     syscall
 
     ret

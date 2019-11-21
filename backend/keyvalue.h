@@ -11,7 +11,7 @@ sds key;
 sds value;
 } keyvaluepair;
 
-keyvaluepair create_keyvaluepair();
+keyvaluepair create_keyvaluepair(void);
 sds get_value_by_key(sds);
 keyvaluepair create_keyvalue_from_header(sds);
 

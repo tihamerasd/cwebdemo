@@ -37,6 +37,13 @@ sds adminroute(http_request* hrq){
 	flateSetVar(f, "listelem", "third elem");
 	flateDumpTableLine(f, "ullist");
 
+	printf("varnumber: %d\n", hrq->bodycount);
+	for(int i=0; i<hrq->bodycount; i++){
+	flateSetVar(f, "key", hrq->req_body[i].key);
+	flateSetVar(f, "value", hrq->req_body[i].value);
+	flateDumpTableLine(f, "parameters");
+	}
+	
 	char *buf = flatePage(f);
 	sds dynpage =sdsnew(buf);
 	free(buf);
@@ -51,9 +58,10 @@ sds initdir_for_static_files(sds url){
 	sds fullpath = sdsnew(ROOTPATH); // THIS is webroot, don't keep secure things here...
 	fullpath = sdscatsds(fullpath,url);
 	//printf("%s\n",fullpath);
-    int c, size;
+    int c;
+    //TODO move this to request parsing
     sds paramtrimm;
-	int count, j;
+	int count;
 	paramtrimm = sdssplitnth(fullpath,sdslen(fullpath),"?",1,&count,0);
 	sdsfree(fullpath);
 

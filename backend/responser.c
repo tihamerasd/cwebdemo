@@ -42,7 +42,7 @@ for (int i=0; i<100; i++){
 
 sds build_response_header(http_request req){
 	sds *tokens, *tokens2, backsplit;
-	int count, j, count2;
+	int count, count2;
 
 	sds line = sdsnew(req.url);
 	tokens = sdssplitlen(line,sdslen(line),"?",1,&count);

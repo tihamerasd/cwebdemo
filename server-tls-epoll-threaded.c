@@ -476,6 +476,7 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
                     break;
 
                 /* Read application data. */
+                memset(buffer, 0, NUM_READ_BYTES);
                 ret = SSL_Read(sslConn->ssl, buffer, len);
 
                 if (ret == 0) {
@@ -491,9 +492,7 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
         case WRITE:
         ; // DONT delete empty line ...c coding standards hacked... lol
             sds response=portable_responser(hrq);
-            sdsfree(hrq.req_type);
-            sdsfree(hrq.url);
-            sdsfree(hrq.http_version);
+			requestfree(hrq);
             //ret = SSL_Write(sslConn->ssl, response, sdslen(response));
 			//TODO write a function for free request object
 			//TODO ASAP this is the raw ssl_write I really need a
