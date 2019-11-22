@@ -57,15 +57,16 @@ http_request create_request(sds raw_req){
 	if(sdslen(postparams)!=0 && sdslen(getparams)!=0)getparams=sdscat(getparams, "&");
 	getparams = sdscatsds(getparams,postparams);
 	sdsfree(postparams);
-	count2=0;
 	printf("%s\n", getparams);
 	int count3=0;
 	for(j=0; j<count2; j++){
 		hrq.req_body[j]=create_keyvaluepair();
 		sds tmp = sdssplitnth(getparams,sdslen(getparams), "&",1, &count2,j);
 		sds tmp2 = sdssplitnth(tmp, sdslen(tmp), "=", 1, &count3, 0);
+		printf("tmp2: %s\n", tmp2);
 		hrq.req_body[j].key = sdscatsds(hrq.req_body[j].key, tmp2);
 		sds tmp3 = sdssplitnth(tmp, sdslen(tmp), "=", 1, &count3, 1);
+		if(sdslen(tmp2)>0 && sdslen(tmp3)>0)
 		hrq.req_body[j].value = sdscatsds(hrq.req_body[j].value, tmp3);
 		count3=0;
 		hrq.bodycount++;

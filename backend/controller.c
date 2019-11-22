@@ -6,17 +6,21 @@
 #include <dirent.h>
 #include <ctype.h>
 #include "html_templater/flate.h"
+#include "statuscodes.h"
 
 #define ROOTPATH "frontend/"
 
-//Maybe routes should be sds too, i have some speed issue with sds
 sds asdroute(http_request* hrq){
-	printf("%s\n", "The ASD route called");
-	sds a=sdsnew("I'm asd here: ");
-return a=sdscat(a,hrq->url);
+	sds response = adddefaultheaders(*hrq);
+	response=sdscat(response, "<h1> it's my url! :)</h1>");
+	
+return response;
 	}
 sds adminroute(http_request* hrq){
-	printf("%s\n", "admin route called");
+	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
+	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Content-Type", "text/html");
+	
 	Flate *f = NULL;
     flateSetFile(&f, "frontend/templates/temp.html");
 	flateSetVar(f, "titlezone", "");
@@ -41,6 +45,7 @@ sds adminroute(http_request* hrq){
 	for(int i=0; i<hrq->bodycount; i++){
 	flateSetVar(f, "key", hrq->req_body[i].key);
 	flateSetVar(f, "value", hrq->req_body[i].value);
+	printf("key: %s\n",hrq->req_body[i].key);
 	flateDumpTableLine(f, "parameters");
 	}
 	
@@ -48,7 +53,11 @@ sds adminroute(http_request* hrq){
 	sds dynpage =sdsnew(buf);
 	free(buf);
 	flateFreeMem(f);
-	return dynpage;
+
+	sdsfree(dynpage);
+	
+	response = sdscatsds(response, dynpage);
+	return response;
 	}
 
 
@@ -101,9 +110,16 @@ sds initdir_for_static_files(sds url){
 }
 
 sds rootroute(http_request* hrq){
-	printf("%s\n", "root route called");
-	sds index = sdsnew("/index.html");
-	return initdir_for_static_files(index);
+	puts("root route here");
+	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
+	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Content-Type", "text/html\r\n");
+	sds index = sdsnew("index.html");
+	sds content = initdir_for_static_files(index);
+	response = sdscatsds(response, content);
+	sdsfree(content);
+	sdsfree(index);
+	return  response;
 	//return sdsnew("<h1>This Works!</h1><br><p>Congrats! You installed the server.</p>");
 	}
 

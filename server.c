@@ -33,53 +33,41 @@ void  INThandler(int sig)
 }
 void test_responser(http_request hrq){
 	
-sds response_header= build_response_header(hrq);
-
 sds response;
-if (check_route(hrq.url)!=0) {response = do_route(&hrq);}
-else{response = initdir_for_static_files(hrq.url);}
-response_header = sdscatsds(response_header,response);
 
-	register char* arg0 asm("rsi");
-	register int   arg1 asm("rdx")=sdslen(response_header);
-	arg0 = response_header;
+if (check_route(hrq.url)!=0) {
+	response = do_route(&hrq);
+	}
+else{
+	sds response_body = initdir_for_static_files(hrq.url);
+	response = adddefaultheaders(hrq);
+	printf("%s\n",response);
+	response = sdscatsds(response,response_body);
+    sdsfree(response_body);
+	}
+
+	register char* rsireg asm("rsi");
+	register int   rdxreg asm("rdx");
+	rdxreg = sdslen(response);
+	rsireg = response;
     client_to_rdi();
-    
-     sdsfree(response_header);
-	 sdsfree(response);
+    sdsfree(response);
 }
 
-/*http_request portable_requester(char* req){
-	sds req_str=sdsempty();
-	req_str=sdscatlen(req_str,req, strlen(req));
-
-	http_request req = create_request(req_str);
-	sdsfree(req_str);
-	return req;
-	//TODO if length is over than we got the result is DOS
-		}
-*/
 http_request test_requester(void){
 	sds req_str=sdsempty();
 	char* raw_http_request[2048];
 	give_me_socket();
 	register int   mysocket asm("rdi");
-
 	int siz = read(mysocket, raw_http_request, 2048);
-
-	//register char* raw_http_request asm("rsi");
-	//register int   raw_req_len asm("rdx");
-	//int len=_read();
 	req_str=sdscatlen(req_str,raw_http_request, siz);
-	//printf("raw req begin:\n%s\nraw req end\n", req_str);
 	memset(raw_http_request, 0, 2048);
 
 	http_request req = create_request(req_str);
 	sdsfree(req_str);
 	return req;
-	//TODO if length is over than we got the result is DOS
 		}
-//void threadjob(void){
+
 void *threadjob(void* p){
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //initialize mutex for this thread
 	th_arg *thargptr = (th_arg *)p;
@@ -88,10 +76,10 @@ void *threadjob(void* p){
 
 	//TODO multithread is useless because of this lock, we need to lock just write and read
 	//TODO I gues it should crash without lock, but I can't do this.
-	pthread_mutex_lock(&mutex);
+	//pthread_mutex_lock(&mutex);
 	http_request req = test_requester();
 	test_responser(req);
-	pthread_mutex_unlock(&mutex);
+	//pthread_mutex_unlock(&mutex);
 
 	requestfree(req);
 	
@@ -130,15 +118,14 @@ int main(){
 		//closesock();
 	while(thread_count<THREADNUMBER){
 		if (thread_done[thread_count]!=-1){connfd[thread_count]--; continue; }; //skip long processes 
-		if (thread_done[thread_count]==-2) pthread_join(threads[thread_count], NULL); // kill if the long process still run
+		if (thread_done[thread_count]==-2) pthread_join(threads[thread_count], NULL); // kill if the long process still run in next round
 		connfd[thread_count]=_accept();
 
 		th_arg tharg;
 		tharg.th_done=&thread_done[thread_count];
 		tharg.th_num=&threads[thread_count];
 
-		pthread_create(&threads[thread_count], NULL, threadjob,
-					   &tharg);		//create a thread and receive data
+		pthread_create(&threads[thread_count], NULL, threadjob, &tharg);		//create a thread and receive data
 		pthread_join(threads[thread_count], NULL);   //join the finished thread and continue
 		thread_count++;
 		printf("thread_count:%d\n",thread_count);

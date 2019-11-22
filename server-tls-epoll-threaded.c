@@ -388,11 +388,6 @@ static void SSLConn_FreeSSLConn(ThreadData* threadData)
     while (sslConn != NULL) {
         SSLConn* next = sslConn->next;
 
-#ifdef WOLFSSL_ASYNC_CRYPT
-        /* Clear out any events. */
-        while (wolfSSL_AsyncPoll(sslConn->ssl, WOLF_POLL_FLAG_CHECK_HW) == 1)
-             ;
-#endif
         wolfSSL_free(sslConn->ssl);
         sslConn->ssl = NULL;
         close(sslConn->sockfd);
