@@ -1,10 +1,11 @@
 /*made by Tihamer Darai*/
+#include <pthread.h>
 #include "./backend/keyvalue.h"
 #include "./backend/requester.h"
 #include "./backend/responser.h"
 #include "./backend/controller.c"
 #include <signal.h>
-#include <pthread.h>
+
 
 typedef struct th_arg {
     int* th_done;
@@ -31,16 +32,16 @@ void  INThandler(int sig)
      getchar(); // Get new line character
      //}
 }
-void test_responser(http_request hrq){
+void test_responser(void){
 	
 sds response;
-
-if (check_route(hrq.url)!=0) {
-	response = do_route(&hrq);
+printf("%s\n",threadlocalhrq.url);
+if (check_route()!=0) {
+	response = do_route();
 	}
 else{
-	sds response_body = initdir_for_static_files(hrq.url);
-	response = adddefaultheaders(hrq);
+	sds response_body = initdir_for_static_files(threadlocalhrq.url);
+	response = adddefaultheaders(); //response headers, little bit bad name conversion
 	printf("%s\n",response);
 	response = sdscatsds(response,response_body);
     sdsfree(response_body);
@@ -54,7 +55,7 @@ else{
     sdsfree(response);
 }
 
-http_request test_requester(void){
+void test_requester(void){
 	sds req_str=sdsempty();
 	char* raw_http_request[2048];
 	give_me_socket();
@@ -63,10 +64,9 @@ http_request test_requester(void){
 	req_str=sdscatlen(req_str,raw_http_request, siz);
 	memset(raw_http_request, 0, 2048);
 
-	http_request req = create_request(req_str);
+	create_request(req_str);
 	sdsfree(req_str);
-	return req;
-		}
+	}
 
 void *threadjob(void* p){
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //initialize mutex for this thread
@@ -76,12 +76,12 @@ void *threadjob(void* p){
 
 	//TODO multithread is useless because of this lock, we need to lock just write and read
 	//TODO I gues it should crash without lock, but I can't do this.
-	//pthread_mutex_lock(&mutex);
-	http_request req = test_requester();
-	test_responser(req);
-	//pthread_mutex_unlock(&mutex);
+	pthread_mutex_lock(&mutex);
+	test_requester();
+	test_responser();
+	pthread_mutex_unlock(&mutex);
 
-	requestfree(req);
+	requestfree();
 	
 	closesock();
 	*done = -1;

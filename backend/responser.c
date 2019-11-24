@@ -5,8 +5,8 @@
 
 
 //TODO should care about special chars, urlencode and many more...
-int check_route(sds url){
-	for (int i=0; i<table.route_count; i++) if (sdscmp(url, table.routes[i].url) == 0) return 1;
+int check_route(void){
+	for (int i=0; i<table.route_count; i++) if (sdscmp(threadlocalhrq.url, table.routes[i].url) == 0) return 1;
 	return 0;
 	}
 
@@ -20,12 +20,12 @@ void create_route(sds url, FUNC_PTR action){
 	table.route_count++;
 	}
 
-sds do_route(http_request *hrq){
+sds do_route(){
 	FUNC_PTR fv;
 	for (int i=0; i<table.route_count; i++)
-		if (sdscmp(hrq->url,table.routes[i].url) == 0) {
+		if (sdscmp(threadlocalhrq.url,table.routes[i].url) == 0) {
 			fv=table.routes[i].funcref;
-			return fv(hrq);
+			return fv();
 			}
 	return sdsnew("404 NOT FOUND");
 }
@@ -45,8 +45,8 @@ for (int i=0; i<100; i++){
 
 
 
-sds adddefaultheaders(http_request hrq){
-return build_response_header(hrq);
+sds adddefaultheaders(void){
+return build_response_header();
 	}
 
 sds setresponsecode(char* top){
@@ -67,12 +67,12 @@ void addheader(sds *resp, char *key2, char* value2){
 	
 	}
 
-sds build_response_header(http_request req){
+sds build_response_header(void){
 	sds *tokens, *tokens2, backsplit;
 	int count=0, count2=0;
 
 	//getting the content type
-	sds line = sdsnew(req.url);
+	sds line = sdsdup(threadlocalhrq.url);
 	tokens = sdssplitlen(line,sdslen(line),"?",1,&count);
 	backsplit=sdsdup(tokens[0]);
 	tokens2 = sdssplitlen(backsplit,sdslen(backsplit),".",1,&count2);

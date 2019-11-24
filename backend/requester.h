@@ -13,8 +13,12 @@ keyvaluepair req_body[100];
 int bodycount;
 } http_request;
 
-http_request create_request(sds);
+//TODO wtf? it's really important but cause segfault
+//static __thread http_request threadlocalhrq;
+http_request threadlocalhrq;
+
+void create_request(sds);
 void print_http_req(http_request);
-void requestfree(http_request);
+void requestfree(void);
 
 #endif // requester_H

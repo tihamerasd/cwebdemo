@@ -136,24 +136,22 @@ static int          numBytesRead  = NUM_READ_BYTES;
 /* The number of bytes to write to the client. */
 static int          numBytesWrite = NUM_WRITE_BYTES;
 
-http_request portable_requester(char* rawreq, int len){
+void portable_requester(char* rawreq, int len){
 	sds s = sdsempty();
 	s=sdscatlen(s,rawreq,len);
-	http_request req = create_request(s);
+	create_request(s);
 	sdsfree(s);
-	return req;
-	//TODO if length is over than we got the result is DOS
-		}
+}
 
-sds portable_responser(http_request hrq){
+sds portable_responser(void){
 
 sds response;
-if (check_route(hrq.url)!=0) {
-	response = do_route(&hrq);
+if (check_route()!=0) {
+	response = do_route();
 	}
 else{
-	sds response_body = initdir_for_static_files(hrq.url);
-	response = adddefaultheaders(hrq);
+	sds response_body = initdir_for_static_files(threadlocalhrq.url);
+	response = adddefaultheaders();
 	printf("%s\n",response);
 	response = sdscatsds(response,response_body);
     sdsfree(response_body);
@@ -487,12 +485,12 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
 
             if (ret != 1)
                 break;
-            hrq = portable_requester(buffer, len);
+            portable_requester(buffer, len);
             sslConn->state = WRITE;
         case WRITE:
         ; // DONT delete empty line ...c coding standards hacked... lol
-            sds response=portable_responser(hrq);
-			requestfree(hrq);
+            sds response=portable_responser();
+			requestfree();
             //ret = SSL_Write(sslConn->ssl, response, sdslen(response));
 			//TODO write a function for free request object
 			//TODO ASAP this is the raw ssl_write I really need a
@@ -587,6 +585,7 @@ static int CreateSocketListen(int port, int numClients, socklen_t* socketfd) {
         return(EXIT_FAILURE);
     }
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, len) < 0)
+    //if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, len) < 0)
         fprintf(stderr, "setsockopt SO_REUSEADDR failed\n");
     if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &on, len) < 0)
         fprintf(stderr, "setsockopt TCP_NODELAY failed\n");

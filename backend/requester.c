@@ -1,81 +1,109 @@
 #include "requester.h"
 #include "keyvalue.h"
+#include "http_parser/http_parser.h"
 
+void urlparser(const char* url, size_t len){
+	int i=0;
+	while( i<len && url[i]!='?'){i++;}
+	threadlocalhrq.url = sdsnewlen(url,i);
+	printf("%s\n", threadlocalhrq.url);
+	
+	while(i<len){
+	while( i<len && url[i]!='='){i++;}
+	char* separator=&(url[i-1]);
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsnewlen(separator,i);
 
+	if( !(i<len) ){threadlocalhrq.req_body[threadlocalhrq.bodycount++].value=sdsempty();} //handle malformed query-s, need to malloc both key and value, or nothing.
+	
+	while( i<len && url[i]!='&'){i++;}
+	separator=&(url[i-1]);
+	threadlocalhrq.req_body[threadlocalhrq.bodycount++].value = sdsnewlen(separator,i);
+	}
+	
+}
 
 void print_http_req(http_request hr){
 	//printf("req_header:%s %s %s\n", hr.req_type, hr.url, hr.http_version);
 	}
 
-void requestfree(http_request hrq){
-	sdsfree(hrq.url);
-	sdsfree(hrq.http_version);
-	sdsfree(hrq.req_type);
-	//for (int i=0; i<hrq.headercount; i++){
-	//	free(hrq.req_headers[i].key);
-	//	free(hrq.req_headers[i].value);
-	//	}
-	for (int i=0; i<hrq.bodycount-1; i++){
-		free(hrq.req_body[i].key);
-		free(hrq.req_body[i].value);
-		}
+void requestfree(void){
+	sdsfree(threadlocalhrq.req_type);
+	printf("req_type: %s\n", threadlocalhrq.req_type);
+	sdsfree(threadlocalhrq.url);
+	printf("URL: %s\n", threadlocalhrq.url);
+	for(int i=0; i<threadlocalhrq.headercount; i++){
+	printf("HEADER:%s: %s\n", threadlocalhrq.req_headers[i].key, threadlocalhrq.req_headers[i].value);
+	sdsfree(threadlocalhrq.req_headers[i].key);
+	sdsfree(threadlocalhrq.req_headers[i].value);
 	}
 
+	threadlocalhrq.headercount=0;
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+	printf("BODY:%s: %s\n", threadlocalhrq.req_body[i].key, threadlocalhrq.req_body[i].value);
+	sdsfree(threadlocalhrq.req_body[i].key);
+	sdsfree(threadlocalhrq.req_body[i].value);
+	}
+	threadlocalhrq.bodycount=0;
+	}
+
+
+int on_header_field (http_parser *_, const char *at, size_t len){
+	threadlocalhrq.req_headers[threadlocalhrq.headercount].key =sdsnewlen(at, len);    
+	return 0;
+}
+
+int on_header_value (http_parser *_, const char *at, size_t len){
+ 	threadlocalhrq.req_headers[threadlocalhrq.headercount].value =sdsnewlen(at, len);    
+	threadlocalhrq.headercount++;
+	return 0;
+}
+
+int on_headers_complete (http_parser *_, const char *at, size_t len){
+	/* Request Methods 
+	#define HTTP_METHOD_MAP(XX)         \
+	XX(0,  DELETE,      DELETE)       \
+	XX(1,  GET,         GET)          \
+	XX(2,  HEAD,        HEAD)         \
+	XX(3,  POST,        POST)         \
+	XX(4,  PUT,         PUT)          \*/
+
+	if (_->method==0) threadlocalhrq.req_type=sdsnew("DELETE");
+ 	if (_->method==1) threadlocalhrq.req_type=sdsnew("GET");
+ 	if (_->method==2) threadlocalhrq.req_type=sdsnew("HEAD");
+ 	if (_->method==3) threadlocalhrq.req_type=sdsnew("POST");
+ 	if (_->method==4) threadlocalhrq.req_type=sdsnew("PUT");
+ 
+	return 0;
+}
+
+int my_url_callback(http_parser *_, const char *at, size_t len){
+	struct http_parser_url *ipandport=malloc(sizeof(struct http_parser_url));
+	http_parser_parse_url(at, len, 0, ipandport);
+	urlparser( at, len);
+	free(ipandport);
+	return 0;
+}
+
+int on_body(http_parser *_, const char *at, size_t len){
+	urlparser(at, len);
+return 0;
+}
 	
 //TODO this fv is memleaking and really slow... but can't drop, the code need a big rework.
-http_request create_request(sds raw_req){
+void create_request(sds raw_req){
 
-	
-	http_request hrq;
-	hrq.bodycount=0;
-	hrq.headercount=0;
-	int count=0, j, count2=0;
-	raw_req = sdstrim(raw_req,"\r");
-	int lastline=0;
+	http_parser_settings settings;
+	http_parser_settings_init( &settings);
+	settings.on_url = my_url_callback;
+	settings.on_header_field = on_header_field;
+	settings.on_header_value = on_header_value;
+	settings.on_headers_complete = on_headers_complete;
+	settings.on_body = on_body;
 
-	sds firstline =sdssplitnth(raw_req, sdslen(raw_req), "\n", 1, &count, 0);
-	lastline=count-1;
-	int postnum=0;
-	sds postparams= sdssplitnth(raw_req, sdslen(raw_req), "\n", 1, &postnum, lastline);
-	
-	hrq.req_type = sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 0);
-	while (count2<3){
-		firstline = sdscat(firstline," badhacker");
-		count2++;
-		} 
-	sds urlandget = sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 1);
-	hrq.url = sdssplitnth(urlandget,sdslen(urlandget),"?",1,&count2,0);
-	hrq.http_version=sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 2);
+	http_parser *parser = malloc(sizeof(http_parser));
+	http_parser_init(parser, HTTP_REQUEST);
+	parser->data=NULL;
 
-	//TODO separate get and post params
-	sds getparams;
-	getparams = sdssplitnth(urlandget,sdslen(urlandget),"?",1,&count2,1);
-	if(sdslen(postparams)!=0 && sdslen(getparams)!=0)getparams=sdscat(getparams, "&");
-	getparams = sdscatsds(getparams,postparams);
-	sdsfree(postparams);
-	printf("%s\n", getparams);
-	int count3=0, count4=0, count5=0;
-	for(j=0; j<count2; j++){
-		hrq.req_body[j].key=sdsempty();
-		hrq.req_body[j].value=sdsempty();
-		sds tmp = sdssplitnth(getparams,sdslen(getparams), "&",1, &count4,j);
-		sds tmp2 = sdssplitnth(tmp, sdslen(tmp), "=", 1, &count3, 0);
-		hrq.req_body[j].key = sdscatsds(hrq.req_body[j].key, tmp2);
-		sds tmp3 = sdssplitnth(tmp, sdslen(tmp), "=", 1, &count5, 1);
-		if(sdslen(tmp2)>0 && sdslen(tmp3)>0){
-		hrq.req_body[j].value = sdscatsds(hrq.req_body[j].value, tmp3);
-		hrq.bodycount++;
-		}
-		count3=0;
-		sdsfree(tmp);
-		sdsfree(tmp2);
-		sdsfree(tmp3);
-		//printf("%d\n", hrq.bodycount);
-		}
-		
-	sdsfree(getparams);
-	sdsfree(urlandget);
-	sdsfree(firstline);
-	
-	return hrq;
+	http_parser_execute(parser, &settings, raw_req, (size_t)sdslen(raw_req));
+	free(parser);
 	}

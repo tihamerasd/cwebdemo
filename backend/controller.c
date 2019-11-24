@@ -10,13 +10,13 @@
 
 #define ROOTPATH "frontend/"
 
-sds asdroute(http_request* hrq){
-	sds response = adddefaultheaders(*hrq);
+sds asdroute(){
+	sds response = adddefaultheaders();
 	response=sdscat(response, "<h1> it's my url! :)</h1>");
 	
 return response;
 	}
-sds adminroute(http_request* hrq){
+sds adminroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html");
@@ -41,9 +41,9 @@ sds adminroute(http_request* hrq){
 	flateSetVar(f, "listelem", "third elem");
 	flateDumpTableLine(f, "ullist");
 
-	for(int i=0; i<hrq->bodycount; i++){
-	flateSetVar(f, "key", hrq->req_body[i].key);
-	flateSetVar(f, "value", hrq->req_body[i].value);
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+	flateSetVar(f, "key", threadlocalhrq.req_body[i].key);
+	flateSetVar(f, "value", threadlocalhrq.req_body[i].value);
 	flateDumpTableLine(f, "parameters");
 	}
 	
@@ -106,7 +106,7 @@ sds initdir_for_static_files(sds url){
 		
 }
 
-sds rootroute(http_request* hrq){
+sds rootroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html\r\n");
