@@ -21,6 +21,8 @@ void requestfree(http_request hrq){
 		}
 	}
 
+	
+//TODO this fv is memleaking and really slow... but can't drop, the code need a big rework.
 http_request create_request(sds raw_req){
 
 	
@@ -32,22 +34,16 @@ http_request create_request(sds raw_req){
 	int lastline=0;
 
 	sds firstline =sdssplitnth(raw_req, sdslen(raw_req), "\n", 1, &count, 0);
-	//printf("before:%d\n",count2);
 	lastline=count-1;
 	int postnum=0;
 	sds postparams= sdssplitnth(raw_req, sdslen(raw_req), "\n", 1, &postnum, lastline);
-	//printf("postparameter: %s\n", postparams);
-	//printf("raw: %s\n", raw_req);
 	
 	hrq.req_type = sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 0);
 	while (count2<3){
-		//printf("not valid header");
 		firstline = sdscat(firstline," badhacker");
 		count2++;
 		} 
-	//printf("after:%d\n",count2);
-	sds urlandget;
-	urlandget = sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 1);
+	sds urlandget = sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 1);
 	hrq.url = sdssplitnth(urlandget,sdslen(urlandget),"?",1,&count2,0);
 	hrq.http_version=sdssplitnth(firstline, sdslen(firstline), " ", 1, &count2, 2);
 
@@ -58,18 +54,19 @@ http_request create_request(sds raw_req){
 	getparams = sdscatsds(getparams,postparams);
 	sdsfree(postparams);
 	printf("%s\n", getparams);
-	int count3=0;
+	int count3=0, count4=0, count5=0;
 	for(j=0; j<count2; j++){
-		hrq.req_body[j]=create_keyvaluepair();
-		sds tmp = sdssplitnth(getparams,sdslen(getparams), "&",1, &count2,j);
+		hrq.req_body[j].key=sdsempty();
+		hrq.req_body[j].value=sdsempty();
+		sds tmp = sdssplitnth(getparams,sdslen(getparams), "&",1, &count4,j);
 		sds tmp2 = sdssplitnth(tmp, sdslen(tmp), "=", 1, &count3, 0);
-		printf("tmp2: %s\n", tmp2);
 		hrq.req_body[j].key = sdscatsds(hrq.req_body[j].key, tmp2);
-		sds tmp3 = sdssplitnth(tmp, sdslen(tmp), "=", 1, &count3, 1);
-		if(sdslen(tmp2)>0 && sdslen(tmp3)>0)
+		sds tmp3 = sdssplitnth(tmp, sdslen(tmp), "=", 1, &count5, 1);
+		if(sdslen(tmp2)>0 && sdslen(tmp3)>0){
 		hrq.req_body[j].value = sdscatsds(hrq.req_body[j].value, tmp3);
-		count3=0;
 		hrq.bodycount++;
+		}
+		count3=0;
 		sdsfree(tmp);
 		sdsfree(tmp2);
 		sdsfree(tmp3);

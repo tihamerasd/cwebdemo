@@ -146,16 +146,20 @@ http_request portable_requester(char* rawreq, int len){
 		}
 
 sds portable_responser(http_request hrq){
-	
-sds response_header= build_response_header(hrq);
 
 sds response;
-if (check_route(hrq.url)!=0) {response = do_route(&hrq);}
-else{response = initdir_for_static_files(hrq.url);}
-response_header = sdscatsds(response_header,response);
-//TODO handle errors
-sdsfree(response);
-return response_header;
+if (check_route(hrq.url)!=0) {
+	response = do_route(&hrq);
+	}
+else{
+	sds response_body = initdir_for_static_files(hrq.url);
+	response = adddefaultheaders(hrq);
+	printf("%s\n",response);
+	response = sdscatsds(response,response_body);
+    sdsfree(response_body);
+	}
+
+return response;
 }
 
 static wolfSSL_method_func SSL_GetMethod(int version)
@@ -348,12 +352,13 @@ static void SSLConn_Close(SSLConn_CTX* ctx, ThreadData* threadData,
     if (sslConn->state == CLOSED)
         return;
 
-    pthread_mutex_lock(&sslConnMutex);
-    ret = (ctx->numConnections == 0);
-    ctx->numConnections++;
-    if (wolfSSL_session_reused(sslConn->ssl))
-        ctx->numResumed++;
-    pthread_mutex_unlock(&sslConnMutex);
+	//TODO Is this ok?
+    //pthread_mutex_lock(&sslConnMutex);
+    //ret = (ctx->numConnections == 0);
+    //ctx->numConnections++;
+    //if (wolfSSL_session_reused(sslConn->ssl))
+    //    ctx->numResumed++;
+    //pthread_mutex_unlock(&sslConnMutex);
 
     if (ret) {
         WOLFSSL_CIPHER* cipher;

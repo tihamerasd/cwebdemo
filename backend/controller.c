@@ -41,11 +41,9 @@ sds adminroute(http_request* hrq){
 	flateSetVar(f, "listelem", "third elem");
 	flateDumpTableLine(f, "ullist");
 
-	printf("varnumber: %d\n", hrq->bodycount);
 	for(int i=0; i<hrq->bodycount; i++){
 	flateSetVar(f, "key", hrq->req_body[i].key);
 	flateSetVar(f, "value", hrq->req_body[i].value);
-	printf("key: %s\n",hrq->req_body[i].key);
 	flateDumpTableLine(f, "parameters");
 	}
 	
@@ -53,20 +51,21 @@ sds adminroute(http_request* hrq){
 	sds dynpage =sdsnew(buf);
 	free(buf);
 	flateFreeMem(f);
-
-	sdsfree(dynpage);
 	
 	response = sdscatsds(response, dynpage);
+	sdsfree(dynpage);
 	return response;
 	}
 
 
 sds initdir_for_static_files(sds url){
-	printf("%s\n", url);
-	for (int traversal=0; traversal< sdslen(url)-1;traversal++){ if (url[traversal]==url[traversal+1] && url[traversal]=='.') return sdsnew("Go away hacker, path traversal detected!");}
+	//printf("%s\n", url);
+	for (int traversal=0; traversal< sdslen(url)-1;traversal++){
+		if (url[traversal]==url[traversal+1] && url[traversal]=='.')
+			return sdsnew("Go away hacker, path traversal detected!");
+			}
 	sds fullpath = sdsnew(ROOTPATH); // THIS is webroot, don't keep secure things here...
 	fullpath = sdscatsds(fullpath,url);
-	//printf("%s\n",fullpath);
     int c;
     //TODO move this to request parsing
     sds paramtrimm;
@@ -78,6 +77,7 @@ sds initdir_for_static_files(sds url){
 	for(int i=0; i<100; i++){
 		if (sdscmp(cache.cachedpages[i].key,paramtrimm)==0){
 			printf("%s\n","Served from cache");
+			sdsfree(paramtrimm);
 			return sdsdup(cache.cachedpages[i].value);
 		}
 	}
@@ -85,13 +85,10 @@ sds initdir_for_static_files(sds url){
 		FILE* f = fopen(paramtrimm, "rb");
 		if (f == NULL)
 			{
-			//perror("Error while opening the file.\n");
-			//sdsfreesplitres(tokens,count);
 			sdsfree(paramtrimm);
 			return sdsnew("It's place for 404!"); 
 			}
 
-		printf("splittedpath: %s\n", paramtrimm);
 		sds s = sdsempty();
 		while((c = fgetc(f)) != EOF){
 			s=sdscatlen(s, &c, 1);
@@ -110,7 +107,6 @@ sds initdir_for_static_files(sds url){
 }
 
 sds rootroute(http_request* hrq){
-	puts("root route here");
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html\r\n");
@@ -120,7 +116,6 @@ sds rootroute(http_request* hrq){
 	sdsfree(content);
 	sdsfree(index);
 	return  response;
-	//return sdsnew("<h1>This Works!</h1><br><p>Congrats! You installed the server.</p>");
 	}
 
 void controllercall(){

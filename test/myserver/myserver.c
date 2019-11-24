@@ -6,127 +6,105 @@
 #include "http_parser.h"
 #include <string.h>
 #include <assert.h>
+#include "sds.h"
 
-#define MAX_HEADERS 10
-#define MAX_ELEMENT_SIZE 500
+typedef struct keyvaluepair {
+  sds key;
+  sds value;
+} keyvaluepair;
 
-static http_parser parser;
-typedef struct message {
-  const char *name; // for debugging purposes
-  const char *raw;
-  enum http_parser_type type;
-  int method;
-  int status_code;
-  char request_path[MAX_ELEMENT_SIZE];
-  char request_uri[MAX_ELEMENT_SIZE];
-  char fragment[MAX_ELEMENT_SIZE];
-  char query_string[MAX_ELEMENT_SIZE];
-  char body[MAX_ELEMENT_SIZE];
-  int num_headers;
-  enum { NONE=0, FIELD, VALUE } last_header_element;
-  char headers [MAX_HEADERS][2][MAX_ELEMENT_SIZE];
-  int should_keep_alive;
+typedef struct http_request{
+sds req_type; //GET POST HEAD OPTIONS TRACE PUT DELETE...
+sds url;
+sds http_version; // HTTP/1.1 for example
+keyvaluepair req_headers[100];
+int headercount;
+keyvaluepair req_body[100];
+int bodycount;
+} http_request;
+http_request hrq;
 
-  int message_begin_cb_called;
-  int headers_complete_cb_called;
-  int message_complete_cb_called;
-} message;
-message messages;
+void urlparser(const char* url, size_t len, http_request *hrq){
+	int i=0;
+	while( i<len && url[i]!='?'){i++;}
+	hrq->url = sdsnewlen(url,i-1);
 
-struct line {
-  char *field;
-  size_t field_len;
-  char *value;
-  size_t value_len;
-};
+	i--;
+	while(i<len){
+	while( i<len && url[i]!='='){i++;}
+	char* separator=&(url[i-1]);
+	hrq->req_body[hrq->bodycount].key = sdsnewlen(separator,i-1);
 
-#define CURRENT_LINE (&header[nlines-1])
-#define MAX_HEADER_LINES 2000
-
-static struct line header[MAX_HEADER_LINES];
-static int nlines = 0;
-static int last_was_value = 0;
-static int num_messages;
-
-int my_url_callback (http_parser *_, const char *at, size_t len){
+	if( !(i<len) ){hrq->req_body[hrq->bodycount++].value=sdsempty();} //handle malformed query-s, need to malloc both key and value, or nothing.
+	i--;
+	while( i<len && url[i]!='&'){i++;}
+	separator=&(url[i-1]);
+	hrq->req_body[hrq->bodycount++].value = sdsnewlen(separator,i-1);
+	}
 	
+}
+
+void freeall(void){
+	sdsfree(hrq.req_type);
+	printf("req_type: %s\n", hrq.req_type);
+	sdsfree(hrq.url);
+	printf("URL: %s\n", hrq.url);
+	for(int i=0; i<hrq.headercount; i++){
+	printf("HEADER:%s: %s\n", hrq.req_headers[i].key, hrq.req_headers[i].value);
+	sdsfree(hrq.req_headers[i].key);
+	sdsfree(hrq.req_headers[i].value);
+	}
+
+	hrq.headercount=0;
+	for(int i=0; i<hrq.bodycount; i++){
+	printf("BODY:%s: %s\n", hrq.req_body[i].key, hrq.req_body[i].value);
+	sdsfree(hrq.req_body[i].key);
+	sdsfree(hrq.req_body[i].value);
+	}
+	hrq.bodycount=0;
+}
+
+int on_header_field (http_parser *_, const char *at, size_t len){
+	hrq.req_headers[hrq.headercount].key =sdsnewlen(at, len);    
 	return 0;
 }
 
-int request_path_cb (http_parser *parser, const char *p, size_t len)
-{
-  strncat(messages.request_path, p, len);
-  return 0;
+int on_header_value (http_parser *_, const char *at, size_t len){
+ 	hrq.req_headers[hrq.headercount].value =sdsnewlen(at, len);    
+	hrq.headercount++;
+	return 0;
 }
 
-int
-request_uri_cb (http_parser *parser, const char *p, size_t len)
-{
-  strncat(messages.request_uri, p, len);
-  return 0;
+int on_headers_complete (http_parser *_, const char *at, size_t len){
+	/* Request Methods 
+	#define HTTP_METHOD_MAP(XX)         \
+	XX(0,  DELETE,      DELETE)       \
+	XX(1,  GET,         GET)          \
+	XX(2,  HEAD,        HEAD)         \
+	XX(3,  POST,        POST)         \
+	XX(4,  PUT,         PUT)          \*/
+
+	if (_->method==0) hrq.req_type=sdsnew("DELETE");
+ 	if (_->method==1) hrq.req_type=sdsnew("GET");
+ 	if (_->method==2) hrq.req_type=sdsnew("HEAD");
+ 	if (_->method==3) hrq.req_type=sdsnew("POST");
+ 	if (_->method==4) hrq.req_type=sdsnew("PUT");
+ 
+	return 0;
 }
 
-int
-message_complete_cb (http_parser *parser)
-{
-  messages.method = parser->method;
-  messages.status_code = parser->status_code;
-
-  messages.message_complete_cb_called = 1;
-
-  num_messages++;
-  return 0;
+int my_url_callback(http_parser *_, const char *at, size_t len){
+	struct http_parser_url *ipandport=malloc(sizeof(struct http_parser_url));
+	http_parser_parse_url(at, len, 0, ipandport);
+	sds url = sdsnewlen(at, len);
+	urlparser( at, len, &hrq);
+	sdsfree(url);
+	free(ipandport);
+	return 0;
 }
 
-int
-on_header_field (http_parser *_, const char *at, size_t len)
-{
-  if (last_was_value) {
-    nlines++;
-
-    if (nlines == MAX_HEADER_LINES) ;// error!
-    
-    CURRENT_LINE->value = NULL;
-    CURRENT_LINE->value_len = 0;
-
-    CURRENT_LINE->field_len = len;
-    CURRENT_LINE->field = malloc(len+1);
-    strncpy(CURRENT_LINE->field, at, len);
-      
-  } else {
-
-    CURRENT_LINE->field_len += len;
-    CURRENT_LINE->field = realloc(CURRENT_LINE->field,
-        CURRENT_LINE->field_len+1);
-    strncat(CURRENT_LINE->field, at, len);
-  }
-
-  CURRENT_LINE->field[CURRENT_LINE->field_len] = '\0';
-  last_was_value = 0;
-  printf("%s\n", CURRENT_LINE->field);
-
-return 0;
-}
-
-int
-on_header_value (http_parser *_, const char *at, size_t len)
-{
-  if (!last_was_value) {
-    CURRENT_LINE->value_len = len;
-    CURRENT_LINE->value = malloc(len+1);
-    strncpy(CURRENT_LINE->value, at, len);
-
-  } else {
-    CURRENT_LINE->value_len += len;
-    CURRENT_LINE->value = realloc(CURRENT_LINE->value,
-        CURRENT_LINE->value_len+1);
-    strncat(CURRENT_LINE->value, at, len);
-  }
-
-  CURRENT_LINE->value[CURRENT_LINE->value_len] = '\0';
-
-  last_was_value = 1;
-  printf("%s\n", CURRENT_LINE->value);
+int on_body(http_parser *_, const char *at, size_t len){
+	urlparser(at, len, &hrq);
 return 0;
 }
 
@@ -135,43 +113,48 @@ int main() {
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in server;
   server.sin_family = AF_INET;
-  server.sin_port = htons(8080);
+  server.sin_port = htons(8081);
   server.sin_addr.s_addr = htonl(INADDR_ANY);
+  int opt = 1;
+ if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt))<0) {perror("setsockopt");exit(EXIT_FAILURE);}if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, (char *)&opt, sizeof(opt))<0)   {
+           perror("setsockopt");exit(EXIT_FAILURE);}
   bind(server_fd, (struct sockaddr*) &server, sizeof(server));
   listen(server_fd, 128);
-  for (;;) {
+
+	http_parser_settings settings;
+	http_parser_settings_init( &settings);
+	settings.on_url = my_url_callback;
+	settings.on_header_field = on_header_field;
+	settings.on_header_value = on_header_value;
+	settings.on_headers_complete = on_headers_complete;
+	settings.on_body = on_body;
+
+for (;;) {
     int client_fd = accept(server_fd, NULL, NULL);
 
-    http_parser_settings settings;
-    settings.on_url = my_url_callback;
-    settings.on_headers_complete =message_complete_cb;
-	settings.on_header_value = on_header_value;
-	settings.on_header_field = on_header_field;
-	http_parser_init(&parser, HTTP_REQUEST);
+	http_parser *parser = malloc(sizeof(http_parser));
+	http_parser_init(parser, HTTP_REQUEST);
+	parser->data=NULL;
 
-	size_t len = 80*1024, nparsed;
+	size_t len = 80*1024;
 	char buf[len];
 	ssize_t recved;
-
+	memset(buf,0,len);
 	recved = recv(client_fd, buf, len, 0);
 
 	if (recved < 0) {
-	/* Handle error. */
-		close(client_fd);
-}
-
-	/* Start up / continue the parser.
-	* Note we pass recved==0 to signal that EOF has been received.
-	*/
-	nparsed = http_parser_execute(&parser, &settings, buf, recved);
-	if (parser.upgrade) {
-		close(client_fd);
-	} else if (nparsed != recved) {		
-	close(client_fd);
+		/* Handle error. */
 	}
-printf("%s\n messages");
+
+/* Start up / continue the parser.
+ * Note we pass recved==0 to signal that EOF has been received.
+ */
+	http_parser_execute(parser, &settings, buf, recved);
+	//printf("method: %d\n",parser->method);
     char response[] = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: close\r\n\r\nHello, world!";
-    for (int sent = 0; sent < sizeof(response); sent += send(client_fd, response+sent, sizeof(response)-sent, 0));
+   send(client_fd, response, sizeof(response), 0);
+	freeall();
+	free(parser);
     close(client_fd);
   }
 
