@@ -13,6 +13,14 @@
 //looks interesting, what is it?
 //#define WOLFSSL_ASYNC_CRYPT
 
+void  INThandler(int sig)
+{
+     signal(sig, SIG_IGN);
+     printf("You hitted Ctrl-C\n");
+	 for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
+	 globalfree_cache();
+	 exit(0);
+}
 
 /* Default port to listen on. */
 #define DEFAULT_PORT     8080
@@ -177,7 +185,7 @@ static wolfSSL_method_func SSL_GetMethod(int version)
  * writeTime   The amount of time spent writing data to client.
  * returns 0 on failure, 1 on success, 2 on want read and 3 on want write.
  */
-/*static int SSL_Write(WOLFSSL* ssl, char* reply, int replyLen)
+static int SSL_Write(WOLFSSL* ssl, char* reply, int replyLen)
 {
     int  rwret = 0;
     int  error;
@@ -202,10 +210,11 @@ static wolfSSL_method_func SSL_GetMethod(int version)
     if (error == 0)
         return 1;
 
+    /* Cannot do anything about other errors. */
     fprintf(stderr, "wolfSSL_write error = %d\n", error);
     return 0;
 }
-*/
+
 /* Reads data from a client.
  *
  * ssl         The wolfSSL object.
@@ -341,16 +350,21 @@ static void SSLConn_Free(SSLConn_CTX* ctx)
     free(ctx);
 }
 
-static void SSLConn_Close(SSLConn_CTX* ctx, ThreadData* threadData,SSLConn* sslConn){
+static void SSLConn_Close(SSLConn_CTX* ctx, ThreadData* threadData,
+                          SSLConn* sslConn)
+{
     int ret;
-    if (sslConn->state == CLOSED) return;
 
-	//TODO I don't want this here
-	pthread_mutex_lock(&sslConnMutex);
-    ret = (ctx->numConnections == 0);
-    ctx->numConnections++;
-    if (wolfSSL_session_reused(sslConn->ssl)) ctx->numResumed++;
-    pthread_mutex_unlock(&sslConnMutex);
+    if (sslConn->state == CLOSED)
+        return;
+
+	//TODO Is this ok?
+    //pthread_mutex_lock(&sslConnMutex);
+    //ret = (ctx->numConnections == 0);
+    //ctx->numConnections++;
+    //if (wolfSSL_session_reused(sslConn->ssl))
+    //    ctx->numResumed++;
+    //pthread_mutex_unlock(&sslConnMutex);
 
     if (ret) {
         WOLFSSL_CIPHER* cipher;
@@ -443,8 +457,9 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
 {
     int ret;
     int len;
+    http_request hrq;
     char buffer[NUM_READ_BYTES];
-	puts("run here");
+
     /* Perform TLS handshake if in accept state. */
     switch (sslConn->state) {
         case ACCEPT:
@@ -456,6 +471,7 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
             }
 
             if (ret == 1)
+            printf("ERROR: success");
                 sslConn->state = READ;
             break;
 
@@ -577,9 +593,8 @@ static int CreateSocketListen(int port, int numClients, socklen_t* socketfd) {
         fprintf(stderr, "ERROR: failed to create the socket\n");
         return(EXIT_FAILURE);
     }
-    //SO_REUSEPORT is 15 but c11 is not so clever to know this :D
-    //if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, len) < 0)
-    if (setsockopt(sockfd, SOL_SOCKET, 15, &on, len) < 0)
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, len) < 0)
+    //if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, len) < 0)
         fprintf(stderr, "setsockopt SO_REUSEADDR failed\n");
     if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &on, len) < 0)
         fprintf(stderr, "setsockopt TCP_NODELAY failed\n");
@@ -735,7 +750,7 @@ int main(int argc, char* argv[])
 	globalinit_cache();
 
     wolfSSL_Init();
-
+	signal(SIGINT, INThandler);
 	signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
 	
     /* Create SSL/TLS connection data object. */
