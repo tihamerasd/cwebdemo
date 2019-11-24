@@ -58,21 +58,23 @@ sds adminroute(void){
 	}
 
 
-sds initdir_for_static_files(sds url){
+sds initdir_for_static_files(void){
 	//printf("%s\n", url);
-	for (int traversal=0; traversal< sdslen(url)-1;traversal++){
-		if (url[traversal]==url[traversal+1] && url[traversal]=='.')
+	for (int traversal=0; traversal< sdslen(threadlocalhrq.url)-1;traversal++){
+		if (threadlocalhrq.url[traversal]==threadlocalhrq.url[traversal+1] && threadlocalhrq.url[traversal]=='.')
 			return sdsnew("Go away hacker, path traversal detected!");
 			}
+	puts("notraversal");
 	sds fullpath = sdsnew(ROOTPATH); // THIS is webroot, don't keep secure things here...
-	fullpath = sdscatsds(fullpath,url);
+	fullpath = sdscatsds(fullpath,threadlocalhrq.url);
+	printf("fullpath: %s\n",fullpath);
     int c;
     //TODO move this to request parsing
     sds paramtrimm;
 	int count;
-	paramtrimm = sdssplitnth(fullpath,sdslen(fullpath),"?",1,&count,0);
+	paramtrimm = sdssplitnth(fullpath,sdslen(fullpath),"? ",1,&count,0); //second level defense, later i should remove this
 	sdsfree(fullpath);
-
+printf("paramtrimm: %s\n",paramtrimm);
 //looking for cache
 	for(int i=0; i<100; i++){
 		if (sdscmp(cache.cachedpages[i].key,paramtrimm)==0){
@@ -81,7 +83,7 @@ sds initdir_for_static_files(sds url){
 			return sdsdup(cache.cachedpages[i].value);
 		}
 	}
-
+	
 		FILE* f = fopen(paramtrimm, "rb");
 		if (f == NULL)
 			{
@@ -110,11 +112,12 @@ sds rootroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html\r\n");
-	sds index = sdsnew("index.html");
-	sds content = initdir_for_static_files(index);
+	sdsfree(threadlocalhrq.url);
+	threadlocalhrq.url = sdsnew("index.html");
+	sds content = initdir_for_static_files();
 	response = sdscatsds(response, content);
 	sdsfree(content);
-	sdsfree(index);
+	//sdsfree(index);
 	return  response;
 	}
 

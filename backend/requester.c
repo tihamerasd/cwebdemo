@@ -2,24 +2,44 @@
 #include "keyvalue.h"
 #include "http_parser/http_parser.h"
 
-void urlparser(const char* url, size_t len){
-	int i=0;
-	while( i<len && url[i]!='?'){i++;}
-	threadlocalhrq.url = sdsnewlen(url,i);
-	printf("%s\n", threadlocalhrq.url);
-	
-	while(i<len){
-	while( i<len && url[i]!='='){i++;}
-	char* separator=&(url[i-1]);
-	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsnewlen(separator,i);
+thread_local http_request threadlocalhrq;
 
-	if( !(i<len) ){threadlocalhrq.req_body[threadlocalhrq.bodycount++].value=sdsempty();} //handle malformed query-s, need to malloc both key and value, or nothing.
+void urlparser(char* url, size_t len){
+	int i=0;
+	while( i<len && url[i]!='?'){
+		if (url[i] == ' ') {
+			threadlocalhrq.url = sdsnewlen(url,i);
+			return;}
+		else i++;
+		}
+	threadlocalhrq.url = sdsnewlen(url,i);
+
+	while(i<len){
+	i++;
+	char* separator=&(url[i]);
+	int actuallen=i;
+
+	while( i<len && url[i]!='='){
+		if (url[i] == ' ') return;
+		else i++;
+		}
 	
-	while( i<len && url[i]!='&'){i++;}
-	separator=&(url[i-1]);
-	threadlocalhrq.req_body[threadlocalhrq.bodycount++].value = sdsnewlen(separator,i);
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsnewlen(separator, i-actuallen);
+
+	i++;
+	separator=&(url[i]);
+	actuallen=i;
+	while( i<len && url[i]!='&'){
+		if( url[i] == ' ') {
+				threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsnewlen(separator, i-actuallen);
+				threadlocalhrq.bodycount++;
+			return;
+			}
+		else i++;
+		}
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsnewlen(separator, i-actuallen);
+	threadlocalhrq.bodycount++;
 	}
-	
 }
 
 void print_http_req(http_request hr){
@@ -28,9 +48,9 @@ void print_http_req(http_request hr){
 
 void requestfree(void){
 	sdsfree(threadlocalhrq.req_type);
-	printf("req_type: %s\n", threadlocalhrq.req_type);
+	//printf("req_type: %s\n", threadlocalhrq.req_type);
 	sdsfree(threadlocalhrq.url);
-	printf("URL: %s\n", threadlocalhrq.url);
+	//printf("URL: %s\n", threadlocalhrq.url);
 	for(int i=0; i<threadlocalhrq.headercount; i++){
 	printf("HEADER:%s: %s\n", threadlocalhrq.req_headers[i].key, threadlocalhrq.req_headers[i].value);
 	sdsfree(threadlocalhrq.req_headers[i].key);
@@ -79,13 +99,18 @@ int on_headers_complete (http_parser *_, const char *at, size_t len){
 int my_url_callback(http_parser *_, const char *at, size_t len){
 	struct http_parser_url *ipandport=malloc(sizeof(struct http_parser_url));
 	http_parser_parse_url(at, len, 0, ipandport);
-	urlparser( at, len);
+	printf("URL:%s\n", at);
+	sds s = sdsnewlen(at, len);	//compiler hack, bypass the constant in *at, if clean the code, throw this out.
+	urlparser( s, len); 			//" HTTP/1.1" is 9 length with no ending \0 !!!!!
+	sdsfree(s);
 	free(ipandport);
 	return 0;
 }
 
 int on_body(http_parser *_, const char *at, size_t len){
-	urlparser(at, len);
+	sds s = sdsnewlen(at,len);
+	urlparser(s, len);
+	sdsfree(s);
 return 0;
 }
 	

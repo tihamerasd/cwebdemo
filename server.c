@@ -19,28 +19,28 @@ typedef struct th_arg {
 
 void  INThandler(int sig)
 {
-     char  c;
 	//if (is_main){
      signal(sig, SIG_IGN);
      printf("You hitted Ctrl-C\n");
-     c = getchar();
+     //getchar();
      //if (c == 'y' || c == 'Y'){
 		for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
 		  globalfree_cache();
+		  exit(0);
           //system("fuser -k 54321/tcp"); //TODO not a clear shutdown...should kill all thread  with kill syscall
       //    }
-     getchar(); // Get new line character
+     //getchar(); // Get new line character
      //}
 }
 void test_responser(void){
 	
 sds response;
-printf("%s\n",threadlocalhrq.url);
+if(threadlocalhrq.url==NULL) {threadlocalhrq.url=sdsnew("/index.html");}
 if (check_route()!=0) {
 	response = do_route();
 	}
 else{
-	sds response_body = initdir_for_static_files(threadlocalhrq.url);
+	sds response_body = initdir_for_static_files();
 	response = adddefaultheaders(); //response headers, little bit bad name conversion
 	printf("%s\n",response);
 	response = sdscatsds(response,response_body);
@@ -56,12 +56,11 @@ else{
 }
 
 void test_requester(void){
-	sds req_str=sdsempty();
 	char* raw_http_request[2048];
 	give_me_socket();
 	register int   mysocket asm("rdi");
 	int siz = read(mysocket, raw_http_request, 2048);
-	req_str=sdscatlen(req_str,raw_http_request, siz);
+	sds req_str=sdsnewlen(raw_http_request, siz);
 	memset(raw_http_request, 0, 2048);
 
 	create_request(req_str);
@@ -76,10 +75,10 @@ void *threadjob(void* p){
 
 	//TODO multithread is useless because of this lock, we need to lock just write and read
 	//TODO I gues it should crash without lock, but I can't do this.
-	pthread_mutex_lock(&mutex);
+	//pthread_mutex_lock(&mutex);
 	test_requester();
 	test_responser();
-	pthread_mutex_unlock(&mutex);
+	//pthread_mutex_unlock(&mutex);
 
 	requestfree();
 	

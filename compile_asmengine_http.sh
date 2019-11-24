@@ -10,7 +10,7 @@ nasm -f elf64 server.asm -o server_asm.o;
 $cc ./backend/html_templater/flate.c -c -I.
 $cc ./backend/http_parser/http_parser.c -c -I.
 ar -r libflate.a flate.o
-$cc -no-pie -fPIC server.c server_asm.o http_parser.o ./backend/requester.c ./libflate.a ./backend/keyvalue.c ./backend/responser.c ./backend/dynamic_string/sds.c -o asmengine_server -Wno-implicit-function-declaration -pthread;
+$cc -pedantic -no-pie -fPIC server.c server_asm.o http_parser.o ./backend/requester.c ./libflate.a ./backend/keyvalue.c ./backend/responser.c ./backend/dynamic_string/sds.c -o asmengine_server -Wall -pthread;
 
 #debug
 #valgrind --leak-check=yes -s ./asmengine_server
