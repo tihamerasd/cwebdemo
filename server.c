@@ -6,6 +6,7 @@
 #include "./backend/controller.c"
 #include <signal.h>
 
+#include "backend/webapplication_firewall/yarawaf.h"
 
 typedef struct th_arg {
     int* th_done;
@@ -56,12 +57,14 @@ else{
 }
 
 void test_requester(void){
-	char* raw_http_request[2048];
+	char raw_http_request[2048];
+	memset(raw_http_request, 0, 2048);
 	give_me_socket();
 	register int   mysocket asm("rdi");
 	int siz = read(mysocket, raw_http_request, 2048);
+	yarafunction(raw_http_request, 2048);
+
 	sds req_str=sdsnewlen(raw_http_request, siz);
-	memset(raw_http_request, 0, 2048);
 
 	create_request(req_str);
 	sdsfree(req_str);
@@ -77,7 +80,15 @@ void *threadjob(void* p){
 	//TODO I gues it should crash without lock, but I can't do this.
 	//pthread_mutex_lock(&mutex);
 	test_requester();
-	test_responser();
+	if( match == 1){
+		char* yarablock="YaraWaf is here, go away hacker!\0";
+		register char* rsireg asm("rsi");
+		register int   rdxreg asm("rdx");
+		rsireg = yarablock;
+		rdxreg = strlen(yarablock);
+		client_to_rdi();
+	}
+	else test_responser();
 	//pthread_mutex_unlock(&mutex);
 
 	requestfree();
@@ -108,13 +119,6 @@ int main(){
 	controllercall();
 	globalinit_cache();
 	while(1){
-		//_accept();
-		//http_request req = test_requester();
-		//test_responser(req);
-		//sdsfree(req.req_type);
-		//sdsfree(req.url);
-		//sdsfree(req.http_version);
-		//closesock();
 	while(thread_count<THREADNUMBER){
 		if (thread_done[thread_count]!=-1){connfd[thread_count]--; continue; }; //skip long processes 
 		if (thread_done[thread_count]==-2) pthread_join(threads[thread_count], NULL); // kill if the long process still run in next round

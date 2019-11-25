@@ -10,6 +10,8 @@
 #include "./backend/controller.c"
 
 #include <signal.h>
+
+#include "backend/webapplication_firewall/yarawaf.h"
 //looks interesting, what is it?
 //#define WOLFSSL_ASYNC_CRYPT
 
@@ -485,10 +487,16 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
                 /* Read application data. */
                 memset(buffer, 0, NUM_READ_BYTES);
                 ret = SSL_Read(sslConn->ssl, buffer, len);
-
+                int blocked =yarafunction(buffer, len);
+				if( blocked == 1){
+					char* yarablock="YaraWaf is here, go away hacker!\0";
+					wolfSSL_write(sslConn->ssl, yarablock, strlen(yarablock));
+					SSLConn_Close(ctx, threadData, sslConn);
+					 return EXIT_SUCCESS;
+					};
                 if (ret == 0) {
                     SSLConn_Close(ctx, threadData, sslConn);
-                   //return EXIT_FAILURE;
+                   return EXIT_FAILURE;
                 }
             }
 
