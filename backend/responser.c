@@ -72,8 +72,10 @@ sds build_response_header(void){
 	int count=0, count2=0;
 
 	//getting the content type
+	//if(threadlocalhrq.url==NULL) {threadlocalhrq.url=sdsnew("/index.html");}
 	sds line = sdsdup(threadlocalhrq.url);
 	tokens = sdssplitlen(line,sdslen(line),"?",1,&count);
+	if(tokens==NULL) {tokens=sdsnew("/index.html");}
 	backsplit=sdsdup(tokens[0]);
 	tokens2 = sdssplitlen(backsplit,sdslen(backsplit),".",1,&count2);
 	//printf("filetype: %s\n", tokens2[1]);

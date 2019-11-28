@@ -73,6 +73,7 @@ int on_header_field (http_parser *_, const char *at, size_t len){
 }
 
 int on_header_value (http_parser *_, const char *at, size_t len){
+	if(threadlocalhrq.headercount>MAX_LIST_LENGTH) return 0;
  	threadlocalhrq.req_headers[threadlocalhrq.headercount].value =sdsnewlen(at, len);    
 	threadlocalhrq.headercount++;
 	return 0;
@@ -123,7 +124,7 @@ void create_request(sds raw_req){
 	settings.on_header_field = on_header_field;
 	settings.on_header_value = on_header_value;
 	settings.on_headers_complete = on_headers_complete;
-	settings.on_body = on_body;
+	//settings.on_body = on_body;
 
 	http_parser *parser = malloc(sizeof(http_parser));
 	http_parser_init(parser, HTTP_REQUEST);

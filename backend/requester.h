@@ -3,13 +3,15 @@
 #include "keyvalue.h"
 #include "threads.h"
 
+#define MAX_LIST_LENGTH 100
+
 typedef struct http_request{
 sds req_type; //GET POST HEAD OPTIONS TRACE PUT DELETE...
 sds url;
 sds http_version; // HTTP/1.1 for example
-keyvaluepair req_headers[100];
+keyvaluepair req_headers[MAX_LIST_LENGTH];
 int headercount;
-keyvaluepair req_body[100];
+keyvaluepair req_body[MAX_LIST_LENGTH];
 int bodycount;
 } http_request;
 

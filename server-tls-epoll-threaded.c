@@ -15,15 +15,6 @@
 //looks interesting, what is it?
 //#define WOLFSSL_ASYNC_CRYPT
 
-void  INThandler(int sig)
-{
-     signal(sig, SIG_IGN);
-     printf("You hitted Ctrl-C\n");
-	 for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
-	 globalfree_cache();
-	 exit(0);
-}
-
 /* Default port to listen on. */
 #define DEFAULT_PORT     8080
 /* The number of EPOLL events to accept and process at one time. */
@@ -146,6 +137,8 @@ static int          numBytesRead  = NUM_READ_BYTES;
 /* The number of bytes to write to the client. */
 static int          numBytesWrite = NUM_WRITE_BYTES;
 
+int out=0; //global variable gives information about if sigint happened on server side (exit method).
+
 void portable_requester(char* rawreq, int len){
 	sds s = sdsempty();
 	s=sdscatlen(s,rawreq,len);
@@ -156,6 +149,7 @@ void portable_requester(char* rawreq, int len){
 sds portable_responser(void){
 
 sds response;
+if(threadlocalhrq.url==NULL) {threadlocalhrq.url=sdsnew("/index.html");}
 if (check_route()!=0) {
 	response = do_route();
 	}
@@ -173,7 +167,7 @@ return response;
 static wolfSSL_method_func SSL_GetMethod(int version)
 {
     wolfSSL_method_func method = NULL;
-    method = wolfSSLv23_server_method_ex;
+    method =wolfTLSv1_2_server_method;
     return method;
 }
 
@@ -355,24 +349,24 @@ static void SSLConn_Free(SSLConn_CTX* ctx)
 static void SSLConn_Close(SSLConn_CTX* ctx, ThreadData* threadData,
                           SSLConn* sslConn)
 {
-    int ret;
+    //int ret;
 
     if (sslConn->state == CLOSED)
         return;
 
-	//TODO Is this ok?
-    //pthread_mutex_lock(&sslConnMutex);
-    //ret = (ctx->numConnections == 0);
-    //ctx->numConnections++;
-    //if (wolfSSL_session_reused(sslConn->ssl))
-    //    ctx->numResumed++;
-    //pthread_mutex_unlock(&sslConnMutex);
+	//TODO sg wrong here
+   /* pthread_mutex_lock(&sslConnMutex);
+    ret = (ctx->numConnections == 0);
+    ctx->numConnections++;
+    if (wolfSSL_session_reused(sslConn->ssl))
+        ctx->numResumed++;
+    pthread_mutex_unlock(&sslConnMutex);
 
     if (ret) {
         WOLFSSL_CIPHER* cipher;
         cipher = wolfSSL_get_current_cipher(sslConn->ssl);
         printf("SSL cipher suite is %s\n", wolfSSL_CIPHER_get_name(cipher));
-    }
+    }*/
 
     sslConn->state = CLOSED;
 
@@ -672,7 +666,7 @@ static void *ThreadHandler(void *data)
     }
     threadData->accepting = 1;
 
-    while (1) {
+    while (out!=1) {
         int n;
         int i;
 
@@ -750,6 +744,10 @@ static void *ThreadHandler(void *data)
     return NULL;
 }
 
+void  INThandler(int sig)
+{	 out=1;	 
+}
+
 int main(int argc, char* argv[])
 {
     int i;
@@ -783,7 +781,7 @@ int main(int argc, char* argv[])
     //some global object when exit
     for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
 	globalfree_cache();
-    //exit(EXIT_SUCCESS);
-    return 0;
+    exit(EXIT_SUCCESS);
+    //return 0;
 }
 
