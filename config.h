@@ -1,1 +1,2 @@
-
+//TODO once I should all define macro and all pre-initialized values store here...
+//Actually because of the 3 different engine it's a little bit confusing.

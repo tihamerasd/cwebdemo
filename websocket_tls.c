@@ -591,7 +591,7 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, SSLConn* sslConn)
 {
     int ret;
     int len;
-    sds sdsbs64;
+    sds sdsbs64=NULL;
 
     switch (sslConn->state) {
         case ACCEPT:
@@ -649,8 +649,8 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, SSLConn* sslConn)
 					}
 					requestfree();
 					sdsfree(key);
-					sdsfree(s);
                }
+               sdsfree(s);
                 if (ret == 0) {
                     SSLConn_Close(ctx, sslConn);
                     //TODO duble free if close after upper block but before this
