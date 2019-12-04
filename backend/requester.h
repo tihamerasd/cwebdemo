@@ -15,13 +15,9 @@ keyvaluepair req_body[MAX_LIST_LENGTH];
 int bodycount;
 } http_request;
 
-//TODO wtf? it's really important but cause segfault
-//thread_local http_request threadlocalhrq;
-//http_request threadlocalhrq;
-
 extern thread_local http_request threadlocalhrq;
 
-
+void init_threadlocalhrq(void);
 void create_request(sds);
 void print_http_req(http_request);
 void requestfree(void);

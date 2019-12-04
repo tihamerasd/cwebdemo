@@ -29,6 +29,7 @@ void urlparser(char* url, size_t len){
 		else i++;
 		}
 	threadlocalhrq.url = sdsnewlen(url,i);
+	printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
 
 	while(i<len){
 	i++;
@@ -41,19 +42,24 @@ void urlparser(char* url, size_t len){
 		}
 	
 	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsnewlen(separator, i-actuallen);
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsempty();
 
 	i++;
 	separator=&(url[i]);
 	actuallen=i;
 	while( i<len && url[i]!='&'){
 		if( url[i] == ' ') {
-				threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsnewlen(separator, i-actuallen);
+				threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdscatlen(
+															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
+															separator, i-actuallen);
 				threadlocalhrq.bodycount++;
 			return;
 			}
 		else i++;
 		}
-	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsnewlen(separator, i-actuallen);
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdscatlen(
+															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
+															separator, i-actuallen);
 	threadlocalhrq.bodycount++;
 	}
 }
@@ -61,8 +67,7 @@ void urlparser(char* url, size_t len){
 int main(){
 
 	//char* url="/index.html?asd=1&b=s&ca=7&verylongvaluejustalittlebitlonger=chaos HTTP/1.1";
-	//char* url="/index.html?asd=1&a&c&d==k&s=&b=s&ca=7&verylongvaluejustalittlebitlonger=chaos&omg=fail";
-	char* url="/asd HHTP/1.1";
+	char* url="qqqqqqqqqqqqqqqq https://127.0.0.1:8080/ HTTP/1.1";
 	size_t len= strlen(url);
 	threadlocalhrq.bodycount=0;
 

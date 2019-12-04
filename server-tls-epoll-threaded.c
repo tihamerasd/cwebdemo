@@ -105,7 +105,6 @@ typedef struct SSLConn_CTX {
     double resumeTime;
 } SSLConn_CTX;
 
-
 static void SSLConn_Free(SSLConn_CTX* ctx);
 static void SSLConn_Close(SSLConn_CTX* ctx, ThreadData* threadData,
     SSLConn* sslConn);
@@ -141,6 +140,7 @@ int out=0; //global variable gives information about if sigint happened on serve
 
 void portable_requester(char* rawreq, int len){
 	sds s = sdsempty();
+	init_threadlocalhrq();
 	s=sdscatlen(s,rawreq,len);
 	create_request(s);
 	sdsfree(s);
@@ -149,14 +149,16 @@ void portable_requester(char* rawreq, int len){
 sds portable_responser(void){
 
 sds response;
-if(threadlocalhrq.url==NULL) {threadlocalhrq.url=sdsnew("/index.html");}
+if(threadlocalhrq.url==NULL) {
+	threadlocalhrq.url=sdsnew("index.html");
+	puts("ERROR! Somehow url is null\n");
+	}
 if (check_route()!=0) {
 	response = do_route();
 	}
 else{
 	sds response_body = initdir_for_static_files();
 	response = adddefaultheaders();
-	printf("%s\n",response);
 	response = sdscatsds(response,response_body);
     sdsfree(response_body);
 	}
@@ -451,9 +453,8 @@ static int SSLConn_Accept(ThreadData* threadData, WOLFSSL_CTX* sslCtx,
 static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
                              SSLConn* sslConn)
 {
-    int ret;
-    int len;
-    http_request hrq;
+    int ret=0;
+    int len=0;
     char buffer[NUM_READ_BYTES];
 
     /* Perform TLS handshake if in accept state. */
@@ -481,47 +482,41 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
                 /* Read application data. */
                 memset(buffer, 0, NUM_READ_BYTES);
                 ret = SSL_Read(sslConn->ssl, buffer, len);
-                int blocked =yarafunction(buffer, len);
-				if( blocked == 1){
-					char* yarablock="YaraWaf is here, go away hacker!\0";
+                //yarafunction(buffer, len);
+				match=0;
+				if( match == 1){
+					char* yarablock="HTTP/1.1 200 OK\r\n"
+									"Server: asm_server\r\n"
+									"Content-Type:text/html\r\n"
+									"Connection: Closed\r\n\r\n"
+									"YaraWaf is here, go away hacker!\0";
 					wolfSSL_write(sslConn->ssl, yarablock, strlen(yarablock));
 					SSLConn_Close(ctx, threadData, sslConn);
 					 return EXIT_SUCCESS;
-					};
+					}
                 if (ret == 0) {
                     SSLConn_Close(ctx, threadData, sslConn);
                    return EXIT_FAILURE;
                 }
             }
 
-            if (ret != 1)
-                break;
-            portable_requester(buffer, len);
+            if (ret != 1) return EXIT_FAILURE;
             sslConn->state = WRITE;
         case WRITE:
-        ; // DONT delete empty line ...c coding standards hacked... lol
+			; // DONT delete empty line ...c coding standards hacked... lol
+		    portable_requester(buffer, len);
             sds response=portable_responser();
 			requestfree();
-            //ret = SSL_Write(sslConn->ssl, response, sdslen(response));
-			//TODO write a function for free request object
-			//TODO ASAP this is the raw ssl_write I really need a
-			//better one with error handling like the buggy SSL_Write();
-			ret = wolfSSL_write(sslConn->ssl, response, sdslen(response));
+			ret = SSL_Write(sslConn->ssl, response, sdslen(response));
             
             sdsfree(response);
-            SSLConn_Close(ctx, threadData, sslConn);
-            if (ret == 0) {
-                printf("ERROR: Write failed\n");
-                SSLConn_Close(ctx, threadData, sslConn);
-                //return EXIT_FAILURE;
-            }
 		   SSLConn_Close(ctx, threadData, sslConn);
+		   sslConn->state = CLOSED;
             break;
 
         case CLOSED:
             break;
     }
-
     return EXIT_SUCCESS;
 }
 

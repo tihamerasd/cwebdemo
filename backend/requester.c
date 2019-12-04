@@ -4,16 +4,18 @@
 
 thread_local http_request threadlocalhrq;
 
+/*parsing the url, getting the path and get variables.*/
 void urlparser(char* url, size_t len){
-	int i=0;
+	int i=1;
 	while( i<len && url[i]!='?'){
 		if (url[i] == ' ') {
-			threadlocalhrq.url = sdsnewlen(url,i);
+			threadlocalhrq.url = sdsnewlen(url+1,i-1);
 			return;}
 		else i++;
 		}
-	threadlocalhrq.url = sdsnewlen(url,i);
-
+	threadlocalhrq.url = sdsnewlen(url+1,i-1);
+	printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
+	
 	while(i<len){
 	i++;
 	char* separator=&(url[i]);
@@ -23,21 +25,29 @@ void urlparser(char* url, size_t len){
 		if (url[i] == ' ') return;
 		else i++;
 		}
+
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsempty();
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsempty();
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdscatlen(
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key, separator, i-actuallen);
 	
-	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsnewlen(separator, i-actuallen);
 
 	i++;
 	separator=&(url[i]);
 	actuallen=i;
 	while( i<len && url[i]!='&'){
 		if( url[i] == ' ') {
-				threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsnewlen(separator, i-actuallen);
+				threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdscatlen(
+															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
+															separator, i-actuallen);
 				threadlocalhrq.bodycount++;
 			return;
 			}
 		else i++;
 		}
-	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsnewlen(separator, i-actuallen);
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdscatlen(
+															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
+															separator, i-actuallen);
 	threadlocalhrq.bodycount++;
 	}
 }
@@ -46,39 +56,44 @@ void print_http_req(http_request hr){
 	//printf("req_header:%s %s %s\n", hr.req_type, hr.url, hr.http_version);
 	}
 
+/*free all allocated memory in request object*/
 void requestfree(void){
-	sdsfree(threadlocalhrq.req_type);
 	//printf("req_type: %s\n", threadlocalhrq.req_type);
-	sdsfree(threadlocalhrq.url);
+	sdsfree(threadlocalhrq.req_type);
 	//printf("URL: %s\n", threadlocalhrq.url);
+	sdsfree(threadlocalhrq.url);
 	for(int i=0; i<threadlocalhrq.headercount; i++){
-	printf("HEADER:%s: %s\n", threadlocalhrq.req_headers[i].key, threadlocalhrq.req_headers[i].value);
+	//printf("HEADER:%s: %s\n", threadlocalhrq.req_headers[i].key, threadlocalhrq.req_headers[i].value);
 	sdsfree(threadlocalhrq.req_headers[i].key);
 	sdsfree(threadlocalhrq.req_headers[i].value);
 	}
 
 	threadlocalhrq.headercount=0;
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
-	printf("BODY:%s: %s\n", threadlocalhrq.req_body[i].key, threadlocalhrq.req_body[i].value);
+	//printf("BODY:%s: %s\n", threadlocalhrq.req_body[i].key, threadlocalhrq.req_body[i].value);
 	sdsfree(threadlocalhrq.req_body[i].key);
 	sdsfree(threadlocalhrq.req_body[i].value);
 	}
 	threadlocalhrq.bodycount=0;
 	}
 
-
+/*parser callback for headers first parameter*/
 int on_header_field (http_parser *_, const char *at, size_t len){
 	threadlocalhrq.req_headers[threadlocalhrq.headercount].key =sdsnewlen(at, len);    
+	threadlocalhrq.req_headers[threadlocalhrq.headercount].value =sdsempty();
+	threadlocalhrq.headercount++;  
 	return 0;
 }
 
+/*parser callback for headers second parameter*/
 int on_header_value (http_parser *_, const char *at, size_t len){
 	if(threadlocalhrq.headercount>MAX_LIST_LENGTH) return 0;
- 	threadlocalhrq.req_headers[threadlocalhrq.headercount].value =sdsnewlen(at, len);    
-	threadlocalhrq.headercount++;
+ 	threadlocalhrq.req_headers[threadlocalhrq.headercount-1].value =sdscatlen(threadlocalhrq.req_headers[threadlocalhrq.headercount-1].value,at, len);    
+	
 	return 0;
 }
 
+/*parser callback for headers done*/
 int on_headers_complete (http_parser *_, const char *at, size_t len){
 	/* Request Methods 
 	#define HTTP_METHOD_MAP(XX)         \
@@ -87,35 +102,50 @@ int on_headers_complete (http_parser *_, const char *at, size_t len){
 	XX(2,  HEAD,        HEAD)         \
 	XX(3,  POST,        POST)         \
 	XX(4,  PUT,         PUT)          \*/
-
-	if (_->method==0) threadlocalhrq.req_type=sdsnew("DELETE");
- 	if (_->method==1) threadlocalhrq.req_type=sdsnew("GET");
- 	if (_->method==2) threadlocalhrq.req_type=sdsnew("HEAD");
- 	if (_->method==3) threadlocalhrq.req_type=sdsnew("POST");
- 	if (_->method==4) threadlocalhrq.req_type=sdsnew("PUT");
  
 	return 0;
 }
-
+/*parser callback when pointer is on url*/
 int my_url_callback(http_parser *_, const char *at, size_t len){
-	struct http_parser_url *ipandport=malloc(sizeof(struct http_parser_url));
-	http_parser_parse_url(at, len, 0, ipandport);
-	printf("URL:%s\n", at);
+	//printf("at: %s\n", at);
+	//printf("len: %ld\n", len);
+	//struct http_parser_url *ipandport=malloc(sizeof(struct http_parser_url));
+	//sds tmp = sdsnewlen(at, len);
+	//http_parser_parse_url(tmp, sdslen(tmp), 0, ipandport);
+	//printf("URL:%s\n", at);
 	sds s = sdsnewlen(at, len);	//compiler hack, bypass the constant in *at, if clean the code, throw this out.
-	urlparser( s, len); 			//" HTTP/1.1" is 9 length with no ending \0 !!!!!
+	urlparser( s, sdslen(s)); 			//" HTTP/1.1" is 9 length with no ending \0 !!!!!
 	sdsfree(s);
-	free(ipandport);
+	//free(ipandport);
+	//sdsfree(tmp);
 	return 0;
 }
 
+/*callback for body parsing*/
 int on_body(http_parser *_, const char *at, size_t len){
 	sds s = sdsnewlen(at,len);
 	urlparser(s, len);
 	sdsfree(s);
 return 0;
 }
+
+void init_threadlocalhrq(void){
+threadlocalhrq.req_type=NULL;
+threadlocalhrq.url=NULL;
+threadlocalhrq.http_version=NULL;
+threadlocalhrq.headercount=0;
+threadlocalhrq.bodycount=0;
+
+for (int i=0; i<MAX_LIST_LENGTH; i++){
+	threadlocalhrq.req_headers[i].key=NULL;
+	threadlocalhrq.req_headers[i].value=NULL;
+	threadlocalhrq.req_body[i].key=NULL;
+	threadlocalhrq.req_body[i].value=NULL;
+	}
+
+	}
 	
-//TODO this fv is memleaking and really slow... but can't drop, the code need a big rework.
+/*create the request object, threadlocalhrq is the request object, which is thread local*/
 void create_request(sds raw_req){
 
 	http_parser_settings settings;
@@ -131,5 +161,13 @@ void create_request(sds raw_req){
 	parser->data=NULL;
 
 	http_parser_execute(parser, &settings, raw_req, (size_t)sdslen(raw_req));
+	int defined=1;
+	if (parser->method == 0){ threadlocalhrq.req_type=sdsnew("DELETE"); defined=0;}
+ 	if (parser->method == 1){ threadlocalhrq.req_type=sdsnew("GET"); defined=0;}
+ 	if (parser->method == 2){ threadlocalhrq.req_type=sdsnew("HEAD"); defined=0;}
+ 	if (parser->method == 3){ threadlocalhrq.req_type=sdsnew("POST"); defined=0;}
+ 	if (parser->method == 4){ threadlocalhrq.req_type=sdsnew("PUT"); defined=0;}
+ 	if (parser->method == 6){ threadlocalhrq.req_type=sdsnew("OPTIONS"); defined=0;}
+ 	if (defined == 1) {threadlocalhrq.req_type=sdsnew("UNKNOWN");}
 	free(parser);
 	}

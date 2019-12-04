@@ -65,7 +65,7 @@ void test_requester(void){
 	yarafunction(raw_http_request, 2048);
 
 	sds req_str=sdsnewlen(raw_http_request, siz);
-
+	init_threadlocalhrq();
 	create_request(req_str);
 	sdsfree(req_str);
 	}
@@ -81,7 +81,11 @@ void *threadjob(void* p){
 	//pthread_mutex_lock(&mutex);
 	test_requester();
 	if( match == 1){
-		char* yarablock="YaraWaf is here, go away hacker!\0";
+		char* yarablock="HTTP/1.1 200 OK\r\n"
+						"Server: asm_server\r\n"
+						"Content-Type:text/html\r\n"
+						"Connection: Closed\r\n\r\n"
+						"YaraWaf is here, go away hacker!\0";
 		register char* rsireg asm("rsi");
 		register int   rdxreg asm("rdx");
 		rsireg = yarablock;

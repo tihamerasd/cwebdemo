@@ -23,14 +23,13 @@ char* rule2="rule security_rule"
 					"strings:"
 					"$passwd = \"/etc/passwd\""
 					"$traversal = \"../\""
+					"$get = \"GET \""
 					""
 					"condition:"
-					"$passwd or $traversal"
+					"$passwd or $traversal or not ($get at 0)"
 				"}";
 
-
-
-thread_local int match=0;
+thread_local int match;
 
 int test_max_match_data_callback(int message, void* message_data, void* user_data)
 {		
@@ -48,9 +47,9 @@ int yarafunction(char* input, int len){
 	yr_initialize();
 	yr_compiler_create(&compiler);
 	
-	int pass =yr_compiler_add_string(compiler, rule, NULL);
-	int pass2 =yr_compiler_add_string(compiler, rule2, NULL);
-	//if(pass2==0) puts("compiled"); //check if the rule is good
+	int pass =yr_compiler_add_string(compiler, rule2, NULL);
+	//int pass2 =yr_compiler_add_string(compiler, rule, NULL);
+	//if(pass==0) puts("yara compiled successfully!"); //check if the rule is good
 
 	yr_compiler_get_rules(compiler, &rules);
 	yr_scanner_create(rules, &scanner);
@@ -62,6 +61,8 @@ int yarafunction(char* input, int len){
 	yr_rules_destroy(rules);
 	yr_compiler_destroy(compiler);
 	yr_finalize();
-
-	return match;
+	int cpy= match;
+	match=0;
+	
+	return cpy;
 }

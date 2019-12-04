@@ -6,6 +6,7 @@ echo "WARNING! Hardcoded path in linking to sslpath. Please install or compile w
 #cc="clang"
 cc="gcc"
 
+rm ./https_server
 #https epoll, threading, nonblocking-socket
 $cc ./backend/html_templater/flate.c -c -I.
 ar -r libflate.a flate.o
