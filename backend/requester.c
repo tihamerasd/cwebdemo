@@ -14,7 +14,7 @@ void urlparser(char* url, size_t len){
 		else i++;
 		}
 	threadlocalhrq.url = sdsnewlen(url+1,i-1);
-	printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
+	//printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
 	
 	while(i<len){
 	i++;

@@ -7,17 +7,116 @@
 #include <ctype.h>
 #include "html_templater/flate.h"
 #include "statuscodes.h"
+#include "sql/sqlthings.h"
 
 #define ROOTPATH "frontend/"
 
-/*basic test page*/
-sds asdroute(){
-	sds response = adddefaultheaders();
-	response=sdscat(response, "<h1> it's my url! :)</h1>");
-	
-return response;
+sds onepostroute(void){
+	char* urldecoded=NULL;
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+		if (strcmp(threadlocalhrq.req_body[i].key,"tittle") == 0){
+			urldecoded = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			percent_decode(urldecoded,threadlocalhrq.req_body[i].value);
+			break;
+		}
 	}
+	
+	init_callback_sql();
+	select_by_name(urldecoded);
+	free(urldecoded);
 
+	Flate *f = NULL;
+	flateSetFile(&f, "frontend/templates/one_post.html");
+	flateSetVar(f, "contentzone", "");
+	flateSetVar(f, "title", kvp_array_sqldata[0].value);
+	flateSetVar(f, "category",kvp_array_sqldata[1].value );
+	flateSetVar(f, "content", kvp_array_sqldata[2].value);
+
+	free_callback_sql();
+	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
+	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Content-Type", "text/html");
+	char *buf = flatePage(f);
+	sds dynpage =sdsnew(buf);
+	free(buf);
+	flateFreeMem(f);
+	
+	response = sdscatsds(response, dynpage);
+	sdsfree(dynpage);
+	return response;
+}
+
+sds listincategoryroute(void){
+	char* urldecoded=NULL;
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+		if (strcmp(threadlocalhrq.req_body[i].key,"category") == 0){
+			urldecoded = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			percent_decode(urldecoded,threadlocalhrq.req_body[i].value);
+			break;
+		}
+	}
+	init_callback_sql();
+	select_by_category(urldecoded);
+	free(urldecoded);
+
+	Flate *f = NULL;
+	flateSetFile(&f, "frontend/templates/all_in_category.html");
+
+	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
+			sds sdsurl= sdsnew("/onepost?tittle=");
+			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
+
+			flateSetVar(f, "urlsource",sdsurl);
+			flateSetVar(f, "tittle", kvp_array_sqldata[i].value);
+			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateDumpTableLine(f, "ullist");
+			sdsfree(sdsurl);
+		}
+	}
+    
+	free_callback_sql();
+	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
+	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Content-Type", "text/html");
+	char *buf = flatePage(f);
+	sds dynpage =sdsnew(buf);
+	free(buf);
+	flateFreeMem(f);
+	
+	response = sdscatsds(response, dynpage);
+	sdsfree(dynpage);
+	return response;
+}
+
+sds saveroute(void){
+	char* urldecoded=NULL;
+	sds tittle = NULL;
+	sds category = NULL;
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+		if (strcmp(threadlocalhrq.req_body[i].key,"content") == 0){
+			urldecoded = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			percent_decode(urldecoded,threadlocalhrq.req_body[i].value);
+			continue;
+		}
+		if (strcmp(threadlocalhrq.req_body[i].key,"tittle") == 0){
+			tittle=sdsnew(threadlocalhrq.req_body[i].value);
+			continue;
+		}
+		if (strcmp(threadlocalhrq.req_body[i].key,"category") == 0){
+			category=sdsnew(threadlocalhrq.req_body[i].value);
+			continue;
+		}
+		
+	}
+	insert_post(tittle, category, urldecoded);
+	printf("urldecoded: %s\n",urldecoded);
+	free(urldecoded);
+	sdsfree(tittle);
+	sdsfree(category);
+	
+return sdsnew("Saved! Yay, I see u! :)");
+	}
 /*A test page for showing how get parameters and template rendering works.*/
 sds adminroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
@@ -138,13 +237,21 @@ sds rootroute(void){
 
 /*register the routes here*/
 void controllercall(){
-	sds first = sdsnew("asd");
 	sds sec = sdsnew("admin");
 	sds root = sdsnew("");
-	create_route(first, &asdroute);
+	sds save = sdsnew("admin/save");
+	sds categ = sdsnew("listincategory");
+	sds onepost = sdsnew("onepost");
+
+	create_route(categ, &listincategoryroute);
 	create_route(sec, &adminroute);
 	create_route(root, &rootroute);
-	sdsfree(first);
+	create_route(save, &saveroute);
+	create_route(onepost, &onepostroute);
+
 	sdsfree(sec);
 	sdsfree(root);
+	sdsfree(save);
+	sdsfree(categ);
+	sdsfree(onepost);
 }

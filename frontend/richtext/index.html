@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Admin Posts</title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="site.css">
+        <link rel="stylesheet" href="richtext.min.css">
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="jquery.richtext.min.js"></script>
+
+
+
+    </head>
+    <body>
+<h1 style="text-align: center">Welcome in the Admin section!</h1>
+<p style="text-align: center">edit your posts here</p>
+<div class="page-wrapper box-content">
+<div style="display: inline-flex;">
+<br> <input id="SAVE" type="button" value="SAVE"/>
+Tittle: <input id ="tittle" type="text" name="tittle"><br>
+<p>Categories:</p>
+<select id="categorybox">
+  <option value="Security">Security</option>
+  <option value="CTF">CTF</option>
+  <option value="Linux">Linux</option>
+  <option value="All_IT">All_IT</option>
+</select> 
+</div>
+
+            <textarea class="content" name="example"></textarea>
+
+        </div>
+
+        <script>
+        $(document).ready(function() {
+            $('.content').richText();
+        });
+
+        document.getElementById("SAVE").onclick = function () {
+			var content = document.getElementsByName("example")[0].value;
+			var tittle = document.getElementById("tittle").value;
+			var category= $("#categorybox option:selected").text();
+			$.ajax({
+				type: 'GET',    
+				url:'/admin/save',
+				data:"tittle=" + tittle + "&category=" + category + "&content=" + content,
+				success: function(msg){
+				alert('Saved ' + msg);
+    }
+});
+			};
+
+        </script>
+
+    </body>
+</html>

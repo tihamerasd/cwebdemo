@@ -8,6 +8,7 @@
 #include "./backend/requester.h"
 #include "./backend/responser.h"
 #include "./backend/controller.c"
+#include "./backend/sql/sqlthings.h"
 
 #include <signal.h>
 
@@ -24,7 +25,7 @@
 /* The number of concurrent connections to support. */
 #define SSL_NUM_CONN     1000
 /* The number of bytes to read from client. */
-#define NUM_READ_BYTES   8000
+#define NUM_READ_BYTES   16000
 /* The number of bytes to write to client. */
 #define NUM_WRITE_BYTES  65536
 /* The maximum number of bytes to send in a run. */
@@ -749,7 +750,8 @@ int main(int argc, char* argv[])
 
 	controllercall();
 	globalinit_cache();
-
+	sqlite_init_function();
+	init_callback_sql();
     wolfSSL_Init();
 	signal(SIGINT, INThandler);
 	signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
@@ -776,6 +778,7 @@ int main(int argc, char* argv[])
     //some global object when exit
     for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
 	globalfree_cache();
+	sqlite_close_function();
     exit(EXIT_SUCCESS);
     //return 0;
 }
