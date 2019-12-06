@@ -12,7 +12,7 @@
 
 #include <signal.h>
 
-#include "backend/webapplication_firewall/yarawaf.h"
+#include "backend/webapplication_firewall/simple_waf.h"
 //looks interesting, what is it?
 //#define WOLFSSL_ASYNC_CRYPT
 
@@ -483,14 +483,13 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
                 /* Read application data. */
                 memset(buffer, 0, NUM_READ_BYTES);
                 ret = SSL_Read(sslConn->ssl, buffer, len);
-                //yarafunction(buffer, len);
-				match=0;
+                int match = simple_waf(buffer, len);
 				if( match == 1){
 					char* yarablock="HTTP/1.1 200 OK\r\n"
 									"Server: asm_server\r\n"
 									"Content-Type:text/html\r\n"
 									"Connection: Closed\r\n\r\n"
-									"YaraWaf is here, go away hacker!\0";
+									"WAF is here, go away hacker!\0";
 					wolfSSL_write(sslConn->ssl, yarablock, strlen(yarablock));
 					SSLConn_Close(ctx, threadData, sslConn);
 					 return EXIT_SUCCESS;

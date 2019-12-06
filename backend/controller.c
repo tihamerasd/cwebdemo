@@ -63,6 +63,8 @@ sds listincategoryroute(void){
 
 	Flate *f = NULL;
 	flateSetFile(&f, "frontend/templates/all_in_category.html");
+	flateSetVar(f, "categorynamezone", "");
+	flateSetVar(f, "categoryname", kvp_array_sqldata[1].value);
 
 	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
@@ -99,6 +101,7 @@ sds saveroute(void){
 			unsigned char hardcodedhash[SHA256_DIGEST_SIZE];
 			unsigned char pwhash[SHA256_DIGEST_SIZE];
 			FILE *fp;
+			//read from file, so if the file length <255 no overflow
 			char pwbuff[255];
 			fp = fopen("backend/password.txt", "r");
 			fscanf(fp, "%s", pwbuff);
@@ -120,7 +123,11 @@ sds saveroute(void){
 			continue;
 		}
 		if (strcmp(threadlocalhrq.req_body[i].key,"tittle") == 0){
-			tittle=sdsnew(threadlocalhrq.req_body[i].value);
+			char* decodedtitle= malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			memset(decodedtitle,0, sdslen(threadlocalhrq.req_body[i].value));
+			percent_decode(decodedtitle,threadlocalhrq.req_body[i].value);
+			tittle=sdsnew(decodedtitle);
+			free(decodedtitle);
 			continue;
 		}
 		if (strcmp(threadlocalhrq.req_body[i].key,"category") == 0){

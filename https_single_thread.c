@@ -34,9 +34,10 @@
 #include "./backend/requester.h"
 #include "./backend/responser.h"
 #include "./backend/controller.c"
-#include "backend/webapplication_firewall/yarawaf.h"
+#include "backend/webapplication_firewall/simple_waf.h"
 #include "base64.h"
 #include <unistd.h>
+#include "./backend/sql/sqlthings.h"
 
 /* Default port to listen on. */
 #define DEFAULT_PORT     11111
@@ -605,14 +606,14 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, SSLConn* sslConn)
                 /* Read application data. */
                 memset(buffer, 0, NUM_READ_BYTES);
                 ret = SSL_Read(sslConn->ssl, buffer, len);
-				int waf=0;
-                //waf = yarafunction(buffer, len);
+				
+                int waf = simple_waf(buffer, len);
 				if( waf== 1){
 					char* yarablock="HTTP/1.1 200 OK\r\n"
 									"Server: asm_server\r\n"
 									"Content-Type:text/html\r\n"
 									"Connection: Closed\r\n\r\n"
-									"YaraWaf is here, go away hacker!\0";
+									"Waf is here, go away hacker!\0";
 					wolfSSL_write(sslConn->ssl, yarablock, strlen(yarablock));
 					SSLConn_Close(ctx, sslConn);
 					 return EXIT_SUCCESS;
@@ -852,6 +853,8 @@ int main(int argc, char* argv[])
 
 	controllercall();
 	globalinit_cache();
+	sqlite_init_function();
+	init_callback_sql();
 	signal(SIGINT, INThandler);
 	signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
     /* Initialize wolfSSL */
@@ -973,6 +976,7 @@ int main(int argc, char* argv[])
     wolfSSL_Cleanup();
     for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
 	globalfree_cache();
+	sqlite_close_function();
     exit(EXIT_SUCCESS);
 
 return 0;

@@ -4,9 +4,11 @@
 #include "./backend/requester.h"
 #include "./backend/responser.h"
 #include "./backend/controller.c"
+#include "./backend/sql/sqlthings.h"
 #include <signal.h>
 
-#include "backend/webapplication_firewall/yarawaf.h"
+#include "backend/webapplication_firewall/simple_waf.h"
+
 
 typedef struct th_arg {
     int* th_done;
@@ -18,6 +20,8 @@ typedef struct th_arg {
 //  return getpid() == gettid();
 //}
 
+thread_local int match=0;
+
 void  INThandler(int sig)
 {
 	//if (is_main){
@@ -27,6 +31,7 @@ void  INThandler(int sig)
      //if (c == 'y' || c == 'Y'){
 		for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
 		  globalfree_cache();
+		  sqlite_close_function();
 		  exit(0);
           //system("fuser -k 54321/tcp"); //TODO not a clear shutdown...should kill all thread  with kill syscall
       //    }
@@ -62,7 +67,7 @@ void test_requester(void){
 	give_me_socket();
 	register int   mysocket asm("rdi");
 	int siz = read(mysocket, raw_http_request, 2048);
-	yarafunction(raw_http_request, 2048);
+	match=simple_waf(raw_http_request, 2048);
 
 	sds req_str=sdsnewlen(raw_http_request, siz);
 	init_threadlocalhrq();
@@ -85,7 +90,7 @@ void *threadjob(void* p){
 						"Server: asm_server\r\n"
 						"Content-Type:text/html\r\n"
 						"Connection: Closed\r\n\r\n"
-						"YaraWaf is here, go away hacker!\0";
+						"WAF is here, go away hacker!\0";
 		register char* rsireg asm("rsi");
 		register int   rdxreg asm("rdx");
 		rsireg = yarablock;
@@ -122,6 +127,8 @@ int main(){
 	//init the routes from the controller.c
 	controllercall();
 	globalinit_cache();
+	sqlite_init_function();
+	init_callback_sql();
 	while(1){
 	while(thread_count<THREADNUMBER){
 		if (thread_done[thread_count]!=-1){connfd[thread_count]--; continue; }; //skip long processes 
