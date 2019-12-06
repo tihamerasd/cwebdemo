@@ -19,6 +19,7 @@
 <div class="page-wrapper box-content">
 <div style="display: inline-flex;">
 <br> <input id="SAVE" type="button" value="SAVE"/>
+<br> Password:<input id="password" type="password" value=""/>
 Tittle: <input id ="tittle" type="text" name="tittle"><br>
 <p>Categories:</p>
 <select id="categorybox">
@@ -42,12 +43,15 @@ Tittle: <input id ="tittle" type="text" name="tittle"><br>
 			var content = document.getElementsByName("example")[0].value;
 			var tittle = document.getElementById("tittle").value;
 			var category= $("#categorybox option:selected").text();
+			var pw = document.getElementById("password").value;
 			$.ajax({
 				type: 'GET',    
 				url:'/admin/save',
+				headers: { 'Authentication': pw },
 				data:"tittle=" + tittle + "&category=" + category + "&content=" + content,
 				success: function(msg){
-				alert('Saved ' + msg);
+				alert('Return: ' + msg);
+				document.getElementById("password").value="";
     }
 });
 			};

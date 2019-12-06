@@ -1,6 +1,8 @@
 #include <stdio.h>      // printf
 #include <sqlite3.h>    // SQLite header (from /usr/include)
 
+#include "bcrypt.c"
+
 int main()
 {
     sqlite3 *db;        // database connection
@@ -18,7 +20,10 @@ int main()
     }
     printf("opened SQLite handle successfully.\n");
 
-    /* use the database... */
+char* salt = bcrypt_gensalt(12);
+char* hash = bcrypt("123456", salt);
+
+    return 0;
 
 out:
     /*

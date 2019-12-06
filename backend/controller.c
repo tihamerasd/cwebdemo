@@ -8,6 +8,8 @@
 #include "html_templater/flate.h"
 #include "statuscodes.h"
 #include "sql/sqlthings.h"
+//#include "../wolfssl/wolfssl/wolfssl/wolfcrypt/sha512.h"
+#include "../wolfssl/wolfssl/wolfssl/wolfcrypt/sha256.h"
 
 #define ROOTPATH "frontend/"
 
@@ -90,6 +92,24 @@ sds listincategoryroute(void){
 }
 
 sds saveroute(void){
+	//TODO very bad, once do it not like a retard...
+	//check authetntication
+	for(int i=0; i<threadlocalhrq.headercount; i++){
+		if(strcmp(threadlocalhrq.req_headers[i].key,"Authentication")==0) {
+			unsigned char hardcodedhash[SHA256_DIGEST_SIZE];
+			unsigned char pwhash[SHA256_DIGEST_SIZE];
+			FILE *fp;
+			char pwbuff[255];
+			fp = fopen("backend/password.txt", "r");
+			fscanf(fp, "%s", pwbuff);
+			fclose(fp);
+
+			wc_Sha256Hash(pwbuff, strlen(pwbuff), hardcodedhash);
+			wc_Sha256Hash(threadlocalhrq.req_headers[i].value, sdslen(threadlocalhrq.req_headers[i].value), pwhash);
+			if (memcmp(hardcodedhash,pwhash, SHA256_DIGEST_SIZE)!=0) return sdsnew("BAD PASSWORD");	;
+		}
+	}
+
 	char* urldecoded=NULL;
 	sds tittle = NULL;
 	sds category = NULL;
@@ -115,7 +135,7 @@ sds saveroute(void){
 	sdsfree(tittle);
 	sdsfree(category);
 	
-return sdsnew("Saved! Yay, I see u! :)");
+return sdsnew("Saved! Yaay, Backend C u! :)");
 	}
 /*A test page for showing how get parameters and template rendering works.*/
 sds adminroute(void){
