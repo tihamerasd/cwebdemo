@@ -34,7 +34,8 @@
 #include "./backend/requester.h"
 #include "./backend/responser.h"
 #include "./backend/controller.c"
-#include "backend/webapplication_firewall/yarawaf.h"
+#include "backend/webapplication_firewall/simple_waf.h"
+#include "./backend/sql/sqlthings.h"
 #include "base64.h"
 
 /* Default port to listen on. */
@@ -904,6 +905,8 @@ int main(int argc, char* argv[])
 
     /* Initialize wolfSSL */
     wolfSSL_Init();
+    sqlite_init_function();
+	init_callback_sql();
 
     /* Initialize wolfSSL and create a context object. */
     if (WolfSSLCtx_Init(version, allowDowngrade, ourCert, ourKey, verifyCert, cipherList, &ctx)
@@ -1019,6 +1022,7 @@ int main(int argc, char* argv[])
     SSLConn_Free(sslConnCtx);
     WolfSSLCtx_Final(ctx);
     wolfSSL_Cleanup();
+    sqlite_close_function();
     exit(EXIT_SUCCESS);
 
 return 0;
