@@ -1,7 +1,8 @@
-It's a web framework implementation in c (at least gnu11 which is the gcc default, because of thread-local variables),
-The only dependency is linux kernel for core files.
-
-I also implemented a WAF with libyara, so you also need to do sg like "sudo pacman -S yara", or throw that library out.
+It's a web framework implementation in c (at least gnu11 which is the gcc default, because of thread-local variables).
+Dependencies:
+sqlite3 (or sqlite3-dev on treat like debian systems)
+wolfssl (see below)
+linux kernel (over 4.12) (Once I probably port to BSD)
 
 There's some TODO and FIXME. The project is not ready, but almost prepared for the first tries. Don't use it in production.
 
@@ -24,9 +25,8 @@ WAF: This waf is very primitive but do the job. I won't explain this...
 dynamic rendering template : https://github.com/ac000/libflate
 http parsing: https://github.com/nodejs/http-parser
 string parsing : https://github.com/antirez/sds //really offered to use this instead of char* 
-https crypto : https://github.com/wolfssl
-frontend template : https://www.os-templates.com/free-website-templates/drywest
-Yara: https://github.com/VirusTotal/yara
+crypto things: https://github.com/wolfssl
+sql and database: sqlite3, check native api here: https://www.sqlite.org/index.html
 
 TODOS:
 Cookies and POST parameter parsing not supported at the moment. I should parse them from headers. Ofc. it's useable with own string handler (so boring...)
@@ -34,7 +34,7 @@ Refactor the code, need to clean the messy things, change some values to pointer
 Optimize sds strings for less realloc.
 Optimize flate, I want to load templates from memory instead of filesystem.
 Nodejs parser is not my favourite, think about this alternative: https://github.com/h2o/picohttpparser
-There's a demo websocket implementation, synchron with backend.
+There's a demo websocket implementation, synchronize that with backend.
 
 Later:
 Port the server to a linux kernel-module.
