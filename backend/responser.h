@@ -3,8 +3,11 @@
 
 #include "keyvalue.h"
 #include "requester.h"
+#include <zlib.h>
 
 typedef sds (*FUNC_PTR)(void);
+
+extern pthread_mutex_t cache_locker_mutex;
 
 typedef struct Cache{
 keyvaluepair cachedpages[100]; 
@@ -44,5 +47,6 @@ sds build_response_header(void);
 void addheader(sds*, char*, char*);
 sds adddefaultheaders(void);
 sds setresponsecode(char*);
+void compress_content(char*, int, char*, int*);
 
 #endif //responser_H

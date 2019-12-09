@@ -30,25 +30,34 @@ Only kqueue is for BSD, use the compile_*.sh file instead of Makefile
 1. pkg install sqlite3
 2. openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
 3. ./compile_kqueue_http.sh
-4 ./kqueue_http (Sorry HTTPS is broken yet.)
+4. ./kqueue_http (Sorry HTTPS is broken yet.)
 
 Install on windows: 
 Haha! Forget it, never will work.
 
-create route:
+In backend/sql there is a db_init.sh file use that to create my demo schema. In real project you should do something similar.
+
+Create route:
 1. Check the controllercall() function in backend/controller.c and you will see how to add new routes.
 2. After that, define the function which is shown by the function pointer.
 3. Implement your logic there.
 4. You need to return with malloc-ed sds which contains the heaeders and the html.
 
-rendering template engine:
+Rendering template engine:
 Watch the temp.html file in frontend/templates and the /admin route ( adminroute() function in controller.c ) as an example.
 supported template methods: if, loop, valueing. It's really simple. 
 It's based on: libflate, you can read the docs about that.
 
-Add headers: Don't forget to do this on every response. I won't automatize it, this give you controll.
+Basics:
+1. Add headers: Don't forget to do this on every response. I won't automatize it, this give you controll.
+2. Give attention for cache handling, if your page is dynamic, like handling cookies, or time dependent, or changing the database between queries etc...
+   DONT CACHE that. You can leak all of your data with bad cache method. Even worse, you can crash if a dynamic page recache the static cached content.
+   If you not sure you want, don't cache.
+3. Cookie-handling: sds get_cookie_by_name(sds cookiename): use this function in your route callback function,
+   note that this returns with "NOTFOUND" instead of null if value not found. After that, implement your logic with the value...
 
-WAF: This waf is very primitive but do the job. Just some string grepping. I won't explain this... 
+WAF:
+This waf is very primitive but do the job. Just some string grepping. I won't explain this... 
 Check in backend/webapplication_firewall.
 
 Outer Projects:
@@ -59,17 +68,16 @@ Outer Projects:
 5. sql and database: sqlite3, check native api here: https://www.sqlite.org/index.html
 
 TODOS:
-1. Cookies and POST parameter parsing not supported at the moment. I should parse them from headers.
-   Ofc. it's useable with your own string handler.
-2. BSD HTTPS support is broken. Fix that.
-4. Refactor the code, need to clean some messy things. Add more comments and a better documentation.
-5. Optimize sds strings and libtemplate (Seems to be useless, probably accept syscall is the bottleneck.)
-6. Implement a cache layer for database.
+1. BSD HTTPS support is broken. Fix that.
+2. Refactor the code, need to clean some messy things. Add more comments and a better documentation.
+3. Optimize sds strings and libtemplate. (I'm not sure this worth the effort.)
+4. Endless debug & fuzzing. 
+5. Inflate for less data on tcp.
 
 Later ideas:
-2. Nodejs parser is not my favourite, poking around this alternative: https://github.com/h2o/picohttpparser
-3. Port the server to a linux kernel-module.
-4. The linux/tls.h maybe interesting alternative against userland crypto.
-   https://github.com/torvalds/linux/blob/v4.13/Documentation/networking/tls.txt?fbclid=IwAR0bJmhrp6pdLvl8XXr4s7_kkPHShuw_ewzoQBnozWI6eY0vh10Ca8BZSfg
-5. There's already a demo websocket implementation, synchronize that with backend.
-6. This power thanks to plain c would be fun in Webrtc and streaming. Implement rtun/stun servers, and dtls.
+1. Impelement HTTP/3.0 In chrome-beta and firefox-nigthly build HTTP/3.0 is appeared. After next release will be ready to use.
+2. Rewrite/Port the server to a linux kernel-module.
+3. The linux/tls.h maybe interesting alternative against userland crypto.
+   https://github.com/torvalds/linux/blob/v4.13/Documentation/networking/tls.txt
+4. There's already a demo websocket implementation, synchronize that with backend.
+5. This power thanks to plain c would be fun in Webrtc and streaming. Implement rtun/stun servers, and dtls.

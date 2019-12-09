@@ -4,6 +4,30 @@
 
 thread_local http_request threadlocalhrq;
 
+sds get_cookie_by_name(sds cookiename){
+for(int i=0; i<threadlocalhrq.headercount; i++){
+		if(strcmp(threadlocalhrq.req_headers[i].key,"Cookie")==0) {
+			char* startptr = strstr(threadlocalhrq.req_headers[i].value, cookiename);
+			if (startptr==NULL) return sdsempty();
+			//TODO check length if startptr is in scope
+			startptr=startptr+sdslen(cookiename); //ptr show after the name;
+			if (*startptr == '='){		//valid format is "cookiename=blablabla;"
+				char* endptr = threadlocalhrq.req_headers[i].value +
+							   sdslen(threadlocalhrq.req_headers[i].value); 
+				int newlen=0;
+				//TODO wtf man? delete this...
+				//Can I broke more programming rules in one line, bitch?
+				//what if ";" is part of cookie? I drop the end, Is it legal?
+				for(char* looper = startptr+1; (*looper != ';' && looper < endptr); looper++, newlen++);
+				sds ret = sdsnewlen(startptr+1, newlen);
+				printf("Cookie value: %s\n",ret);
+				return ret;
+			}
+		}
+	}
+puts("Cookie is NULL");
+return sdsempty();
+}
 /*parsing the url, getting the path and get variables.*/
 void urlparser(char* url, size_t len){
 	int i=1;
@@ -75,6 +99,9 @@ void requestfree(void){
 	sdsfree(threadlocalhrq.req_body[i].value);
 	}
 	threadlocalhrq.bodycount=0;
+
+	sdsfree(threadlocalhrq.rawurl);
+	sdsfree(threadlocalhrq.rawbody);
 	}
 
 /*parser callback for headers first parameter*/
@@ -115,6 +142,7 @@ int my_url_callback(http_parser *_, const char *at, size_t len){
 	//printf("URL:%s\n", at);
 	sds s = sdsnewlen(at, len);	//compiler hack, bypass the constant in *at, if clean the code, throw this out.
 	urlparser( s, sdslen(s)); 			//" HTTP/1.1" is 9 length with no ending \0 !!!!!
+	threadlocalhrq.rawurl = sdsdup(s);
 	sdsfree(s);
 	//free(ipandport);
 	//sdsfree(tmp);
@@ -124,8 +152,9 @@ int my_url_callback(http_parser *_, const char *at, size_t len){
 /*callback for body parsing*/
 int on_body(http_parser *_, const char *at, size_t len){
 	sds s = sdsnewlen(at,len);
-	urlparser(s, len);
-	sdsfree(s);
+	//urlparser(s, len); //TODO value parser almost the same like get param parsing without the '?' sign handler
+						 //POST is relatively rare, parse it on
+	threadlocalhrq.rawbody=s;
 return 0;
 }
 
@@ -143,6 +172,8 @@ for (int i=0; i<MAX_LIST_LENGTH; i++){
 	threadlocalhrq.req_body[i].value=NULL;
 	}
 
+threadlocalhrq.rawurl = NULL;
+threadlocalhrq.rawbody= NULL;
 	}
 	
 /*create the request object, threadlocalhrq is the request object, which is thread local*/

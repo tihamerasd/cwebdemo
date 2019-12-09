@@ -2,6 +2,24 @@
 #include "keyvalue.h"
 #include "requester.h"
 
+pthread_mutex_t cache_locker_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void compress_content(char* input, int input_len, char* output, int* output_len){
+z_stream defstream;
+defstream.zalloc = Z_NULL;
+defstream.zfree = Z_NULL;
+defstream.opaque = Z_NULL;
+defstream.avail_in = (uInt)input_len; // size of input, string + terminator
+defstream.next_in = (Bytef *)input; // input char array
+defstream.avail_out = (uInt)input_len; // size of output It's not sure thats enough. malloced outer with same size
+defstream.next_out = (Bytef *)output; // output char array
+deflateInit(&defstream, 9);
+deflate(&defstream, Z_FINISH);
+deflateEnd(&defstream);
+printf("Deflated size is: %lu\n", (char*)defstream.next_out - output);
+*output_len =(int)((char*)defstream.next_out - output);
+output[*output_len]='\0';
+}
 
 //TODO url controlled by user, and 404 caching too... What if \0 makes confuse in sdscmp?
 //checking the route, if it's returns 1 means route is in cache
@@ -95,11 +113,12 @@ sds build_response_header(void){
 			}
 		}
 
-	printf("extension: %s\n",extension);
+	//printf("extension: %s\n",extension);
 	
 	sds builder=sdsempty();
 	builder=sdscat(builder,"HTTP/1.1 200 OK\x0d\x0a");
 	builder = sdscat(builder,"Server: asm_server\r\n");
+	builder = sdscat(builder,"Content-Encoding: deflate\r\n");
 	builder = sdscat(builder,"Content-Type:");
 	sds png =sdsnew("png");
 	sds css =sdsnew("css");

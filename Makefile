@@ -7,7 +7,7 @@ ws:
 	$(CC) -std=gnu11 -pedantic -o wss_socket websocket_tls.c ./http_parser.o ./libflate.a \
 		./backend/webapplication_firewall/simple_waf.c ./backend/sql/sqlthings.c ./backend/dynamic_string/sds.c ./backend/keyvalue.c \
 		./backend/responser.c ./backend/requester.c -Wall -I/usr/local/include -I/home/tihi/cweb/wolfssl/wolfssl \
-		-Os -pthread -L/usr/local/lib -L/home/tihi/cweb/wolfssl/wolfssl -lm -lwolfssl -lssl -lcrypto -lsqlite3
+		-Os -pthread -L/usr/local/lib -L/home/tihi/cweb/wolfssl/wolfssl -lm -lwolfssl -lssl -lcrypto -lsqlite3 -lz
 
 http:
 	nasm -f elf64 server.asm -o server_asm.o;
@@ -16,7 +16,7 @@ http:
 	ar -r libflate.a flate.o
 	$(CC) -pedantic -no-pie -fPIC server.c server_asm.o http_parser.o ./backend/requester.c \
 		./backend/webapplication_firewall/simple_waf.c ./backend/sql/sqlthings.c ./libflate.a ./backend/keyvalue.c ./backend/responser.c \
-		./backend/dynamic_string/sds.c -o asmengine_server -Wall -pthread -lsqlite3 -lwolfssl;
+		./backend/dynamic_string/sds.c -o asmengine_server -Wall -pthread -lsqlite3 -lwolfssl -lz
 	
 https_multi:
 	$(CC) ./backend/html_templater/flate.c -c -I.
@@ -25,7 +25,7 @@ https_multi:
 	$(CC) -std=gnu11 -pedantic -o https_server server-https-epoll-threaded.c ./http_parser.o ./libflate.a\
 		./backend/webapplication_firewall/simple_waf.c ./backend/sql/sqlthings.c ./backend/dynamic_string/sds.c\
 		./backend/keyvalue.c ./backend/responser.c ./backend/requester.c -Wall -I/usr/local/include -I/home/tihi/cweb/wolfssl/wolfssl\
-		-Os -pthread -L/usr/local/lib -L/home/tihi/cweb/wolfssl/wolfssl -lm -lwolfssl -lsqlite3
+		-Os -pthread -L/usr/local/lib -L/home/tihi/cweb/wolfssl/wolfssl -lm -lwolfssl -lsqlite3 -lz
 	
 https_single:
 	$(CC) ./backend/html_templater/flate.c -c -I.
@@ -34,7 +34,7 @@ https_single:
 	$(CC) -std=gnu11 -pedantic -o singlethread_https_server https_single_thread.c ./http_parser.o ./libflate.a\
 		./backend/webapplication_firewall/simple_waf.c ./backend/sql/sqlthings.c ./backend/dynamic_string/sds.c ./backend/keyvalue.c \
 		./backend/responser.c ./backend/requester.c -Wall -I/usr/local/include -I/home/tihi/cweb/wolfssl/wolfssl \
-		-Os -pthread -L/usr/local/lib -L/home/tihi/cweb/wolfssl/wolfssl -lm -lwolfssl -lsqlite3
+		-Os -pthread -L/usr/local/lib -L/home/tihi/cweb/wolfssl/wolfssl -lm -lwolfssl -lsqlite3 -lz
 
 clean:
 	rm -r ./*.a;

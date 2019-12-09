@@ -13,7 +13,14 @@
 
 #define ROOTPATH "frontend/"
 
+//TODO mutex locking cache object when write...
+sds serve_from_cache(void);
+void add_to_cache(sds);
+
 sds onepostroute(void){
+	sds cachedcontent = serve_from_cache();
+	if (cachedcontent != NULL) return cachedcontent;
+
 	char* urldecoded=NULL;
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
 		if (strcmp(threadlocalhrq.req_body[i].key,"tittle") == 0){
@@ -45,10 +52,15 @@ sds onepostroute(void){
 	
 	response = sdscatsds(response, dynpage);
 	sdsfree(dynpage);
+	add_to_cache(response);
 	return response;
 }
 
 sds listincategoryroute(void){
+
+	sds cachedcontent = serve_from_cache();
+	if (cachedcontent != NULL) return cachedcontent;
+
 	char* urldecoded=NULL;
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
 		if (strcmp(threadlocalhrq.req_body[i].key,"category") == 0){
@@ -90,6 +102,7 @@ sds listincategoryroute(void){
 	
 	response = sdscatsds(response, dynpage);
 	sdsfree(dynpage);
+	add_to_cache(response);
 	return response;
 }
 
@@ -141,14 +154,30 @@ sds saveroute(void){
 	free(urldecoded);
 	sdsfree(tittle);
 	sdsfree(category);
-	
+
+	//reset the cache
+	//yup if someone getting data from cache in an other thread while that is uninitialized
+	//this will be race condition and undefined behaviour
+	pthread_mutex_lock(&cache_locker_mutex);
+	globalfree_cache();
+	globalinit_cache();
+	pthread_mutex_unlock(&cache_locker_mutex);
+
+
 return sdsnew("Saved! Yaay, Backend C u! :)");
 	}
 /*A test page for showing how get parameters and template rendering works.*/
 sds adminroute(void){
+
+	sds cachedcontent = serve_from_cache();
+	if (cachedcontent != NULL) return cachedcontent;
+	
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html");
+	//WARNING it's for deflate test
+		addheader(&response, "Content-Encoding", "deflate\r\n");
+
 	
 	Flate *f = NULL;
     flateSetFile(&f, "frontend/templates/temp.html");
@@ -180,9 +209,28 @@ sds adminroute(void){
 	sds dynpage =sdsnew(buf);
 	free(buf);
 	flateFreeMem(f);
+
+		//cookie example
+	sds testcookiename=sdsnew("test");
+	sds cookievalue = get_cookie_by_name(testcookiename);
+	if (sdslen(cookievalue) == 0 ) cookievalue = sdscat(cookievalue,"NOTFOUND");
+	dynpage = sdscat(dynpage, "<br><h3>Cookies:</h3><br>");
+	dynpage = sdscatsds(dynpage, testcookiename);
+	dynpage = sdscat(dynpage, ": ");
+	dynpage = sdscatsds(dynpage, cookievalue);
+	sdsfree(testcookiename);
+	sdsfree(cookievalue);
+
+	//deflate test
+	int compresslen = 0;
+	char* compressed_data = malloc(sdslen(dynpage)+1);
+	compress_content(dynpage, sdslen(dynpage), compressed_data, &compresslen);
 	
-	response = sdscatsds(response, dynpage);
 	sdsfree(dynpage);
+	response = sdscatlen(response, compressed_data, compresslen);
+	free(compressed_data);
+	
+	//add_to_cache(response);
 	return response;
 	}
 
@@ -197,27 +245,54 @@ int path_traversal(void){
 	return 0;
 	}
 
+//looking for static page in cache
+sds serve_from_cache(void){
+	for(int i=0; i<100; i++){
+		if (sdscmp(cache.cachedpages[i].key,threadlocalhrq.rawurl)==0){
+			printf("%s\n","Served from cache");
+			return sdsdup(cache.cachedpages[i].value);
+		}
+	}
+return NULL;
+}
+
+void add_to_cache(sds content){
+		pthread_mutex_lock(&cache_locker_mutex);
+		//clear old values
+		sdsfree(cache.cachedpages[cache.counter].key);
+		sdsfree(cache.cachedpages[cache.counter].value);
+		//add new ones
+		cache.cachedpages[cache.counter].key=sdsdup(threadlocalhrq.rawurl);
+		cache.cachedpages[cache.counter].value=sdsdup(content);
+		cache.counter++;
+		
+		//ring buffer turns, don't let overflow the cache
+		if (cache.counter>99) cache.counter=0;
+		pthread_mutex_unlock(&cache_locker_mutex);
+
+}
 /*Serve the static files from filesystem to cache and to user
  * returns the content of the file*/
 sds initdir_for_static_files(void){
 
 	//check traversal
-	if (path_traversal() == 1) return sdsnew("Go away hacker!");
+	if (path_traversal() == 1) {
+			int compresslen = 0;
+			char *notthis="Go away hacker, I see you trying.";
+			char* compressed_data = malloc(strlen(notthis)+1);
+			compress_content(notthis, strlen(notthis)+1, compressed_data, &compresslen);
+			sds ret = sdsnewlen(compressed_data, compresslen);
+			free(compressed_data);
+			return  ret;
+		};
 
 	//converting url path to filesystem path
 	sds paramtrimm = sdsnew(ROOTPATH); // THIS is webroot, don't keep secure things here...
 	paramtrimm = sdscatsds(paramtrimm,threadlocalhrq.url);
 	//printf("fullpath: %s\n",paramtrimm);
-	
-	//looking for static page in cache
-	for(int i=0; i<100; i++){
-		if (sdscmp(cache.cachedpages[i].key,paramtrimm)==0){
-			//printf("%s\n","Served from cache");
-			sdsfree(paramtrimm);
-			return sdsdup(cache.cachedpages[i].value);
-		}
-	}
 
+	sds s= serve_from_cache();
+	if (s!=NULL){sdsfree(paramtrimm); return s;}
 
 		//if not found in cache, serve from file system
 		int c=0;
@@ -226,24 +301,29 @@ sds initdir_for_static_files(void){
 		if (f == NULL)
 			{
 			sdsfree(paramtrimm);
-			return sdsnew("It's place for 404!"); 
+			int compresslen = 0;
+			char *notthis="It is place for 404! But it's a quite bad place :(";
+			char* compressed_data = malloc(strlen(notthis)+10); //TODO need a normal solution for negative deflate performance
+			compress_content(notthis, strlen(notthis)+1, compressed_data, &compresslen);
+			sds ret = sdsnewlen(compressed_data, compresslen);
+			free(compressed_data);
+			return  ret;
 			}
-		sds s = sdsempty();
+			s = sdsempty();
 		while((c = fgetc(f)) != EOF){
 			s=sdscatlen(s, &c, 1);
 		}
 		fclose(f);
-		
-		//anything happens, put the page into cache
-		keyvaluepair cachelog;
-		cachelog.key=sdsdup(paramtrimm);
-		cachelog.value=sdsdup(s);
-		sdsfree(cache.cachedpages[cache.counter].key);
-		sdsfree(cache.cachedpages[cache.counter].value);
-		cache.cachedpages[cache.counter++]=cachelog;
 
-		//ring buffer turns, don't let overflow the cache
-		if (cache.counter>100) cache.counter=0;
+		//deflate the query
+		int compresslen = 0;
+		char* compressed_data = malloc(sdslen(s)+1);
+		compress_content(s, sdslen(s), compressed_data, &compresslen);
+		sdsfree(s);
+		s=sdsnewlen(compressed_data, compresslen);
+		free(compressed_data);
+		//anything happens, put the page into cache
+		add_to_cache(s);
 		sdsfree(paramtrimm);
 		return s;
 		
@@ -251,14 +331,20 @@ sds initdir_for_static_files(void){
 
 /*route for the index page*/
 sds rootroute(void){
+
+	//sds cachedcontent = serve_from_cache();
+	//if (cachedcontent != NULL) return cachedcontent;
+	
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
-	addheader(&response, "Content-Type", "text/html\r\n");
+	addheader(&response, "Content-Type", "text/html");
+	addheader(&response, "Content-Encoding", "deflate\r\n");
 	sdsfree(threadlocalhrq.url);
 	threadlocalhrq.url = sdsnew("index.html");
 	sds content = initdir_for_static_files();
 	response = sdscatsds(response, content);
 	sdsfree(content);
+	//add_to_cache(response);
 	return  response;
 	}
 

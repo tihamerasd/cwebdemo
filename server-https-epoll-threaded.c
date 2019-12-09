@@ -469,7 +469,7 @@ static int SSLConn_ReadWrite(SSLConn_CTX* ctx, ThreadData* threadData,
             }
 
             if (ret == 1)
-            printf("ERROR: success");
+            //printf("ERROR: success");
                 sslConn->state = READ;
             break;
 
