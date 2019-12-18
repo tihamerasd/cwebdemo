@@ -152,6 +152,7 @@ sds portable_responser(void){
 sds response;
 if(threadlocalhrq.url==NULL) {
 	threadlocalhrq.url=sdsnew("index.html");
+	threadlocalhrq.rawurl=sdsnew("index.html");
 	puts("ERROR! Somehow url is null\n");
 	}
 if (check_route()!=0) {

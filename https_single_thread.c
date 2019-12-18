@@ -46,9 +46,9 @@
 /* The number of concurrent connections to support. */
 #define SSL_NUM_CONN     10000
 /* The number of bytes to read from client. */
-#define NUM_READ_BYTES   80000
+#define NUM_READ_BYTES   8000
 /* The number of bytes to write to client. */
-#define NUM_WRITE_BYTES  2048
+#define NUM_WRITE_BYTES  16000
 /* The maximum number of bytes to send in a run. */
 #define MAX_BYTES        -1
 /* The maximum length of the queue of pending connections. */
@@ -146,6 +146,7 @@ sds portable_responser(void){
 sds response;
 if(threadlocalhrq.url==NULL) {
 	threadlocalhrq.url=sdsnew("index.html");
+	threadlocalhrq.rawurl=sdsnew("index.html");
 	puts("ERROR! Somehow url is null\n");
 	}
 if (check_route()!=0) {
