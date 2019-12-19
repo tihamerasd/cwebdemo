@@ -111,8 +111,8 @@ sds saveroute(void){
 	//check authetntication
 	for(int i=0; i<threadlocalhrq.headercount; i++){
 		if(strcmp(threadlocalhrq.req_headers[i].key,"Authentication")==0) {
-			unsigned char hardcodedhash[SHA256_DIGEST_SIZE];
-			unsigned char pwhash[SHA256_DIGEST_SIZE];
+			//unsigned char hardcodedhash[SHA256_DIGEST_SIZE];
+			//unsigned char pwhash[SHA256_DIGEST_SIZE];
 			FILE *fp;
 			//read from file, so if the file length <255 no overflow
 			char pwbuff[255];
@@ -120,9 +120,10 @@ sds saveroute(void){
 			fscanf(fp, "%s", pwbuff);
 			fclose(fp);
 
-			wc_Sha256Hash(pwbuff, strlen(pwbuff), hardcodedhash);
-			wc_Sha256Hash(threadlocalhrq.req_headers[i].value, sdslen(threadlocalhrq.req_headers[i].value), pwhash);
-			if (memcmp(hardcodedhash,pwhash, SHA256_DIGEST_SIZE)!=0) return sdsnew("BAD PASSWORD");	;
+			//wc_Sha256Hash(pwbuff, strlen(pwbuff), hardcodedhash);
+			//wc_Sha256Hash(threadlocalhrq.req_headers[i].value, sdslen(threadlocalhrq.req_headers[i].value), pwhash);
+			//if (memcmp(hardcodedhash,pwhash, SHA256_DIGEST_SIZE)!=0) return sdsnew("BAD PASSWORD");	;
+			if (memcmp(pwbuff,threadlocalhrq.req_headers[i].value, strlen(pwbuff))!=0) return sdsnew("BAD PASSWORD");	;
 		}
 	}
 
@@ -280,7 +281,7 @@ sds initdir_for_static_files(void){
 			int compresslen = 0;
 			char *notthis="Go away hacker, I see you trying.";
 			char* compressed_data = malloc(strlen(notthis)+1);
-			compress_content(notthis, strlen(notthis)+1, compressed_data, &compresslen);
+			compress_content(notthis, strlen(notthis), compressed_data, &compresslen);
 			sds ret = sdsnewlen(compressed_data, compresslen);
 			free(compressed_data);
 			return  ret;
