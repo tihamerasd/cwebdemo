@@ -9,7 +9,7 @@
 #include "statuscodes.h"
 #include "sql/sqlthings.h"
 //#include "../wolfssl/wolfssl/wolfssl/wolfcrypt/sha512.h"
-#include "../wolfssl/wolfssl/wolfssl/wolfcrypt/sha256.h"
+//#include "../wolfssl/wolfssl/wolfssl/wolfcrypt/sha256.h"
 
 #define ROOTPATH "frontend/"
 
