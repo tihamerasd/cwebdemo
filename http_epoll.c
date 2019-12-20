@@ -89,7 +89,7 @@ void do_use_fd(int epoll_fd, int fd)
     close(fd);
 }
 
-void run()
+void run(int bind_port)
 {
     struct epoll_event ev, events[MAX_EVENTS];
     struct sockaddr_in my_addr;
@@ -109,7 +109,7 @@ void run()
     socklen_t addrlen= sizeof(peer_addr);
 
     my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(8001);
+    my_addr.sin_port = htons(bind_port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(listen_sock , (struct sockaddr*)&my_addr,
@@ -166,15 +166,27 @@ void  INThandler(int sig){
     exit (0);
 }
 
-int main()
-{
+int main(int argc, char* argv[])
+{int bind_port = -1;
+	if( argc == 2 ) {
+      printf("Server runing on: %s\n", argv[1]);
+      bind_port= atoi(argv[1]);
+   }
+   else if( argc > 2 ) {
+      printf("Too many arguments supplied.\n");
+      exit(0);
+   }
+   else {
+      printf("One argument expected.\n");
+      exit(0);
+   }
    controllercall();
 	globalinit_cache();
 	sqlite_init_function();
 	init_callback_sql();
 	signal(SIGINT, INThandler);
 	signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
-    run();
+    run(bind_port);
 //should never happen
 return 0;
 }
