@@ -349,6 +349,28 @@ sds rootroute(void){
 	return  response;
 	}
 
+sds ifconfigroute(void){
+	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
+	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Content-Type", "text/html");
+	addheadersdone(&response);
+	FILE *fp = popen("ifconfig lo "
+	//FILE *fp = popen("ifconfig wlan0 "
+	//FILE *fp = popen("ifconfig eth0 "
+					 "| grep 'inet' "
+					 "| cut -d: -f2 "
+					 "| awk '{print $2}' "
+					 "|tr -s \"\n\"","r");
+	char ipaddr[100];
+	memset(ipaddr, 0, sizeof(ipaddr));
+	fread(ipaddr, 1, sizeof(ipaddr),fp);
+	response=sdscat(response,"<h1>My public ip is: ");
+	response=sdscat(response,ipaddr);
+	response=sdscat(response, "</h1>");
+	fclose(fp);
+	return response;
+	}
+
 /*register the routes here*/
 void controllercall(){
 	sds sec = sdsnew("admin");
@@ -356,16 +378,19 @@ void controllercall(){
 	sds save = sdsnew("admin/save");
 	sds categ = sdsnew("listincategory");
 	sds onepost = sdsnew("onepost");
+	sds ifconfig = sdsnew("ifconfig");
 
 	create_route(categ, &listincategoryroute);
 	create_route(sec, &adminroute);
 	create_route(root, &rootroute);
 	create_route(save, &saveroute);
 	create_route(onepost, &onepostroute);
+	create_route(ifconfig, &ifconfigroute);
 
 	sdsfree(sec);
 	sdsfree(root);
 	sdsfree(save);
 	sdsfree(categ);
 	sdsfree(onepost);
+	sdsfree(ifconfig);
 }

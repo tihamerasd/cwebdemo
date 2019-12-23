@@ -101,6 +101,11 @@ void addheader(sds *resp, char *key2, char* value2){
 	
 	}
 
+/*plain string parsing adding "\r\n" bytes to the response string.*/
+void addheadersdone(sds *resp){
+	*resp=sdscat(*resp,"\r\n");
+	}
+
 /*return  a header, dynamically builds response type*/
 sds build_response_header(void){
 	sds extension=sdsempty();

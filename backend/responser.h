@@ -46,6 +46,7 @@ sds build_response(http_response);
 sds build_response_header(void);
 void addheader(sds*, char*, char*);
 sds adddefaultheaders(void);
+void addheadersdone(sds *resp);
 sds setresponsecode(char*);
 void compress_content(char*, int, char*, int*);
 
