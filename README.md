@@ -15,8 +15,7 @@ from http_request struct. Please note that file uploads will never work over the
 every *server.c) in this "server forced close" style implementation. I probabaly won't implement this because 
 I prefer the run-speed not the perfect rfc implementation.
 
-At the last tests, in the http version there was served over 1000 query/s. (intel i5-3th gen.)
-Debugged with Burp nikto openVAS and valgrind, memory handling is nearly stable.
+Debugged with Burp-pro, nikto, openVAS, and valgrind, memory handling is nearly stable. But you can never debug enough...
 
 C version is at least -std=gnu11 which is the gcc default, because of the thread-local variables. 
 Tested with gcc and clang too.
