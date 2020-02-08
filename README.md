@@ -1,3 +1,10 @@
+Please note that this documentation is a little bit outdated.
+
+If you are here because of CrySyS Security Challenge 2020: This page is not the part of the ctf, it's just my webserver framework for hosting the challenges.
+Against this, feel free to pwn my code as a whitebox exercise. If you can write a working exploit, you will find the flags in the avato dockers. But I'm sure it's much more harder than solve the task in normal way.
+http-epoll server used in master boot record.
+wss_server used in websocket
+
 It's a web framework implementation in the good old C.
 The project supports everything you need for a basic webapp like dynamic content rendering, static file serving,
 sql database handling, and WAF. You have to do all the things by hand, the framework don't do anything, unless 
