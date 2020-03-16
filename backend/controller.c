@@ -18,8 +18,8 @@ sds serve_from_cache(void);
 void add_to_cache(sds);
 
 sds onepostroute(void){
-	sds cachedcontent = serve_from_cache();
-	if (cachedcontent != NULL) return cachedcontent;
+	//sds cachedcontent = serve_from_cache();
+	//if (cachedcontent != NULL) return cachedcontent;
 
 	char* urldecoded=NULL;
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
@@ -34,8 +34,16 @@ sds onepostroute(void){
 	select_by_name(urldecoded);
 	free(urldecoded);
 
+	sds languagecookie=sdsnew("lang");
+	sds cookievalue = get_cookie_by_name(languagecookie);
 	Flate *f = NULL;
-	flateSetFile(&f, "frontend/templates/one_post.html");
+	sds lang=sdsnew("HUN");
+	if (sdscmp(cookievalue,lang)==0) flateSetFile(&f, "frontend/templates/one_post.html");
+	else flateSetFile(&f, "frontend/templates/one_post_EN.html");
+	sdsfree(lang);
+	sdsfree(cookievalue);
+	sdsfree(languagecookie);
+	
 	flateSetVar(f, "contentzone", "");
 	flateSetVar(f, "title", kvp_array_sqldata[0].value);
 	flateSetVar(f, "category",kvp_array_sqldata[1].value );
@@ -52,14 +60,14 @@ sds onepostroute(void){
 	
 	response = sdscatsds(response, dynpage);
 	sdsfree(dynpage);
-	add_to_cache(response);
+	//add_to_cache(response);
 	return response;
 }
 
 sds listincategoryroute(void){
 
-	sds cachedcontent = serve_from_cache();
-	if (cachedcontent != NULL) return cachedcontent;
+	//sds cachedcontent = serve_from_cache();
+	//if (cachedcontent != NULL) return cachedcontent;
 
 	char* urldecoded=NULL;
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
@@ -73,8 +81,16 @@ sds listincategoryroute(void){
 	select_by_category(urldecoded);
 	free(urldecoded);
 
+	sds languagecookie=sdsnew("lang");
+	sds cookievalue = get_cookie_by_name(languagecookie);
 	Flate *f = NULL;
-	flateSetFile(&f, "frontend/templates/all_in_category.html");
+	sds lang=sdsnew("HUN");
+	if (sdscmp(cookievalue,lang)==0) flateSetFile(&f, "frontend/templates/all_in_category.html");
+	else flateSetFile(&f, "frontend/templates/all_in_category_EN.html");
+	sdsfree(lang);
+	sdsfree(languagecookie);
+	sdsfree(cookievalue);
+	
 	flateSetVar(f, "categorynamezone", "");
 	flateSetVar(f, "categoryname", kvp_array_sqldata[1].value);
 
@@ -102,7 +118,7 @@ sds listincategoryroute(void){
 	
 	response = sdscatsds(response, dynpage);
 	sdsfree(dynpage);
-	add_to_cache(response);
+	//add_to_cache(response);
 	return response;
 }
 
@@ -339,12 +355,76 @@ sds rootroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html");
-	addheader(&response, "Content-Encoding", "deflate\r\n");
-	sdsfree(threadlocalhrq.url);
-	threadlocalhrq.url = sdsnew("index.html");
-	sds content = initdir_for_static_files();
-	response = sdscatsds(response, content);
-	sdsfree(content);
+	//addheader(&response, "Content-Encoding", "deflate\r\n");
+
+	init_callback_sql();
+	select_by_category("CTF");
+
+	sds languagecookie=sdsnew("lang");
+	sds cookievalue = get_cookie_by_name(languagecookie);
+	Flate *f = NULL;
+	sds lang=sdsnew("HUN");
+	if (sdscmp(cookievalue,lang)==0) flateSetFile(&f, "frontend/templates/index.html");
+	else flateSetFile(&f, "frontend/templates/index_EN.html");
+	sdsfree(lang);
+	sdsfree(languagecookie);
+	sdsfree(cookievalue);
+	
+	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
+			sds sdsurl= sdsnew("/onepost?tittle=");
+			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
+
+			flateSetVar(f, "LINK",sdsurl);
+			flateSetVar(f, "TITTLE", kvp_array_sqldata[i].value);
+			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateDumpTableLine(f, "listctf");
+			sdsfree(sdsurl);
+		}
+	}
+	free_callback_sql();
+	init_callback_sql();
+	select_by_category("Security");
+
+	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
+			sds sdsurl= sdsnew("/onepost?tittle=");
+			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
+
+			flateSetVar(f, "LINK2",sdsurl);
+			flateSetVar(f, "TITTLE2", kvp_array_sqldata[i].value);
+			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateDumpTableLine(f, "listsecurity");
+			sdsfree(sdsurl);
+		}
+	}
+
+	free_callback_sql();
+	init_callback_sql();
+	select_by_category("Linux");
+
+	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
+			sds sdsurl= sdsnew("/onepost?tittle=");
+			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
+
+			flateSetVar(f, "LINK3",sdsurl);
+			flateSetVar(f, "TITTLE3", kvp_array_sqldata[i].value);
+			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateDumpTableLine(f, "listnix");
+			sdsfree(sdsurl);
+		}
+	}
+    
+	free_callback_sql();
+
+	char *buf = flatePage(f);
+	sds dynpage =sdsnew(buf);
+	free(buf);
+	flateFreeMem(f);
+	response = sdscatsds(response, dynpage);
+	sdsfree(dynpage);
+	
 	//add_to_cache(response);
 	return  response;
 	}
@@ -371,6 +451,24 @@ sds ifconfigroute(void){
 	return response;
 	}
 
+sds languageroute(void){
+	char* urldecoded=NULL;
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+		if (strcmp(threadlocalhrq.req_body[i].key,"lang") == 0){
+			urldecoded = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			percent_decode(urldecoded,threadlocalhrq.req_body[i].value);
+			break;
+		}
+	}
+		sds response = NULL;
+		if (strcmp(urldecoded,"HUN")==0)
+			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=HUN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n");
+		else
+			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=EN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n");
+		free(urldecoded);
+	return response;
+	}
+
 /*register the routes here*/
 void controllercall(){
 	sds sec = sdsnew("admin");
@@ -379,6 +477,7 @@ void controllercall(){
 	sds categ = sdsnew("listincategory");
 	sds onepost = sdsnew("onepost");
 	sds ifconfig = sdsnew("ifconfig");
+	sds language = sdsnew("language");
 
 	create_route(categ, &listincategoryroute);
 	create_route(sec, &adminroute);
@@ -386,6 +485,7 @@ void controllercall(){
 	create_route(save, &saveroute);
 	create_route(onepost, &onepostroute);
 	create_route(ifconfig, &ifconfigroute);
+	create_route(language, &languageroute);
 
 	sdsfree(sec);
 	sdsfree(root);
@@ -393,4 +493,5 @@ void controllercall(){
 	sdsfree(categ);
 	sdsfree(onepost);
 	sdsfree(ifconfig);
+	sdsfree(language);
 }

@@ -20,35 +20,42 @@
 <div style="display: inline-flex;">
 <br> <input id="SAVE" type="button" value="SAVE"/>
 <br> Password:<input id="password" type="password" value=""/>
-Tittle: <input id ="tittle" type="text" name="tittle"><br>
+Tittle_HUN: <input id ="tittle_HUN" type="text" name="tittle_hun"><br>
+Tittle_EN: <input id ="tittle_EN" type="text" name="tittle_en"><br>
 <p>Categories:</p>
 <select id="categorybox">
   <option value="Security">Security</option>
   <option value="CTF">CTF</option>
   <option value="Linux">Linux</option>
-  <option value="All_IT">All_IT</option>
 </select> 
-</div>
-
-            <textarea class="content" name="example"></textarea>
-
+		</div>
+			<h2>Content_HUN:</h2>
+            <textarea class="content" name="richtext_hun"></textarea>
         </div>
 
+		</div>
+			<h2>Content_ENG:</h2>
+            <textarea class="content" name="richtext_eng"></textarea>
+        </div>
+        
         <script>
         $(document).ready(function() {
             $('.content').richText();
         });
 
         document.getElementById("SAVE").onclick = function () {
-			var content = document.getElementsByName("example")[0].value;
-			var tittle = document.getElementById("tittle").value;
+			var content_eng = document.getElementsByName("richtext_eng")[0].value;
+			var content_hun = document.getElementsByName("richtext_hun")[0].value;
+			var title_hun = document.getElementById("tittle_HUN").value;
+			var title_en = document.getElementById("tittle_EN").value;
 			var category= $("#categorybox option:selected").text();
 			var pw = document.getElementById("password").value;
 			$.ajax({
 				type: 'GET',    
 				url:'/admin/save',
 				headers: { 'Authentication': pw },
-				data:"tittle=" + tittle + "&category=" + category + "&content=" + content,
+				data:"title_hun=" + title_hun + "&title_en=" + title_en + "&category=" + category
+					+ "&content_hun=" + content_hun+ "&content_eng=" + content_eng,
 				success: function(msg){
 				alert('Return: ' + msg);
 				document.getElementById("password").value="";

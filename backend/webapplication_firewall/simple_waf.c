@@ -1,5 +1,6 @@
 #include "simple_waf.h"
-
+#define _GNU_SOURCE
+#include <string.h>
 
 int simple_waf(char* input, int len){
 	int match=0;

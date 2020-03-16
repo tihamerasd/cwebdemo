@@ -60,6 +60,7 @@ void urlparser(char* url, size_t len){
 	separator=&(url[i]);
 	actuallen=i;
 	while( i<len && url[i]!='&'){
+		if(threadlocalhrq.headercount>=MAX_LIST_LENGTH-2) return;
 		if( url[i] == ' ') {
 				threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdscatlen(
 															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
@@ -106,6 +107,7 @@ void requestfree(void){
 
 /*parser callback for headers first parameter*/
 int on_header_field (http_parser *_, const char *at, size_t len){
+	if(threadlocalhrq.headercount>MAX_LIST_LENGTH) return 0;
 	threadlocalhrq.req_headers[threadlocalhrq.headercount].key =sdsnewlen(at, len);    
 	threadlocalhrq.req_headers[threadlocalhrq.headercount].value =sdsempty();
 	threadlocalhrq.headercount++;  

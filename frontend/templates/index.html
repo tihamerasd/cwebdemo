@@ -25,7 +25,7 @@
                 <li data-v-13c56f80=""><a data-v-13c56f80="" href="/" class="router-link-active">Főoldal</a></li>
                 <li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_me_hu/hu_me_embedded.html" class="">Rólam</a></li>
                 <li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_site_hu/hu_site_embedded.html" class="">Így készült</a></li>
-                <li data-v-13c56f80=""><span data-v-13c56f80="">Összes bejegyzés <span data-v-13c56f80="" class="darr">▼</span></span>
+                               <li data-v-13c56f80=""><span data-v-13c56f80="">Összes bejegyzés <span data-v-13c56f80="" class="darr">▼</span></span>
                     <ul data-v-13c56f80="">
                         <a data-v-13c56f80="" href="/listincategory?category=CTF">
                             <li data-v-13c56f80="">CTF</li>
@@ -55,14 +55,51 @@
                 </li>
             </ul>
         </nav>
-        
-        <div style="font-family: Orbitron; font-weight: 700; color: #fff; font-size: 1.5rem;">
- <!-- #BEGINZONE contentzone -->
-<h3>Cím: ##title##</h3>
-<h5>Kategória: ##category##</h5>
-##content##
-<!-- #ENDZONE contentzone -->
-</div>
+        <div class="alerts"></div>
+        <main class="challenges" style="">
+            <h1>Mprotect</h1>
+            <section>
+                <ul class="categoryList">
+                    <li class="categoryTitle">
+                        <h2>CTF</h2></li>
+                        <ul class="challengeList">
+                        <!-- #BEGINTABLE listctf -->
+                        <a href="##LINK##">
+							<li class="challenge">
+								<h1 class="title">##TITTLE##</h1>
+                            </li>
+                        </a>
+						<!-- #ENDTABLE listctf -->
+                    </ul>
+                </ul>
+                <ul class="categoryList">
+                    <li class="categoryTitle">
+                        <h2>IT biztonság</h2></li>
+                    <ul class="challengeList">
+						<!-- #BEGINTABLE listsecurity -->
+                        <a href="##LINK2##">
+							<li class="challenge">
+								<h1 class="title">##TITTLE2##</h1>
+                            </li>
+                        </a>
+						<!-- #ENDTABLE listsecurity -->
+                    </ul>
+                </ul>
+                <ul class="categoryList">
+                    <li class="categoryTitle">
+                        <h2>*NIX</h2></li>
+                    <ul class="challengeList">
+						<!-- #BEGINTABLE listnix -->
+                        <a href="##LINK3##">
+							<li class="challenge">
+								<h1 class="title">##TITTLE3##</h1>
+                            </li>
+                        </a>
+						<!-- #ENDTABLE listnix -->
+                    </ul>
+                </ul>   
+            </section>
+        </main>
     </div>
 </body>
 

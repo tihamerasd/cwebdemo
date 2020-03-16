@@ -22,16 +22,16 @@
         <div class="bg"></div>
         <nav data-v-13c56f80="">
             <ul data-v-13c56f80="">
-                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/" class="router-link-active">Főoldal</a></li>
-                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_me_hu/hu_me_embedded.html" class="">Rólam</a></li>
-                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_site_hu/hu_site_embedded.html" class="">Így készült</a></li>
-                <li data-v-13c56f80=""><span data-v-13c56f80="">Összes bejegyzés <span data-v-13c56f80="" class="darr">▼</span></span>
+                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/" class="router-link-active">Home</a></li>
+                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_me_en/en_me_embedded.html" class="">About_me</a></li>
+                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_site_en/en_site_embedded.html" class="">About_site</a></li>
+                               <li data-v-13c56f80=""><span data-v-13c56f80="">All_posts <span data-v-13c56f80="" class="darr">▼</span></span>
                     <ul data-v-13c56f80="">
                         <a data-v-13c56f80="" href="/listincategory?category=CTF">
                             <li data-v-13c56f80="">CTF</li>
                         </a>
                         <a data-v-13c56f80="" href="/listincategory?category=Security">
-                            <li data-v-13c56f80="">IT biztonság</li>
+                            <li data-v-13c56f80="">Security</li>
                         </a>
                         <a data-v-13c56f80="" href="/listincategory?category=Linux">
                             <li data-v-13c56f80="">*NIX</li>
@@ -39,13 +39,13 @@
                     </ul>
                 <li data-v-13c56f80=""><a data-v-13c56f80="" href="/challenges" class="router-link-exact-active router-link-active"></a></li>
                 <!----><span data-v-13c56f80="" class="divider"></span>
-                  <li data-v-13c56f80=""><span data-v-13c56f80="">Nyelv <span data-v-13c56f80="" class="darr">▼</span></span>
+                  <li data-v-13c56f80=""><span data-v-13c56f80="">Language <span data-v-13c56f80="" class="darr">▼</span></span>
                     <ul data-v-13c56f80="">
                         <a data-v-13c56f80="" href="/language?lang=EN">
-                            <li data-v-13c56f80="">Angol</li>
+                            <li data-v-13c56f80="">EN</li>
                         </a>
                         <a data-v-13c56f80="" href="/language?lang=HUN">
-                            <li data-v-13c56f80="">Magyar</li>
+                            <li data-v-13c56f80="">HUN</li>
                         </a>
                     </ul>
                        <li data-v-13c56f80=""><a data-v-13c56f80="" href="https://mprotect.hu:8443/" class="router-link-active">Chat</a></li>
@@ -55,14 +55,27 @@
                 </li>
             </ul>
         </nav>
-        
-        <div style="font-family: Orbitron; font-weight: 700; color: #fff; font-size: 1.5rem;">
- <!-- #BEGINZONE contentzone -->
-<h3>Cím: ##title##</h3>
-<h5>Kategória: ##category##</h5>
-##content##
-<!-- #ENDZONE contentzone -->
-</div>
+        <div class="alerts"></div>
+        <main class="challenges" style="">
+            <h1>Mprotect</h1>
+            <section>
+                <ul class="categoryList">
+                    <li class="categoryTitle">
+						 <!-- #BEGINZONE categorynamezone -->
+                        <h2>Elements in ##categoryname## category:</h2></li>
+                        <!-- #ENDZONE categorynamezone -->
+                        <ul class="challengeList">
+                        <!-- #BEGINTABLE ullist -->
+                        <a href="##urlsource##">
+							<li class="challenge">
+								<h1 class="title">##tittle##</h1>
+                            </li>
+                        </a>
+						<!-- #ENDTABLE ullist -->
+                    </ul>
+                </ul>
+            </section>
+        </main>
     </div>
 </body>
 
