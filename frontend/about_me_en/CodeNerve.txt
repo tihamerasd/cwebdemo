@@ -1,0 +1,33 @@
+<span id="a">tihi@mprotect_en</span>:<span id="b">~</span><span id="c">$</span> cd about_me
+<span id="a">tihi@mprotect_en</span>:<span id="b">~/about_me</span><span id="c">$</span> cat about_me_en.txt
+Name:___ Tihamer Darai__________
+Email:___darai.tihamer@gmail.com
+Phone:___Ask me in email..._____
+Github:<a href="https://github.com/tihamerasd">___tihamerasd____________</a>
+________________________________<br>
+<span id="a">tihi@mprotect_en</span>:<span id="b">~/about_me</span><span id="c">$</span> cat education.txt
+Budapest University of Technology and Economics - Computer Science BSC 2014 - ...
+Offensive-security - OSCP:  In progress 2020
+BME - CrySyS Lab (student core and c0r3dump team)<br>
+<span id="a">tihi@mprotect_en</span>:<span id="b">~/about_me</span><span id="c">$</span> cat programming_languages.txt
+__Programming:____Scripting:___
+__- C_______________- ansible__
+__- assembly________- bash_____
+__- python_____________________
+__- php________________________
+_______________________________<br>
+<span id="a">tihi@mprotect_en</span>:<span id="b">~/about_me</span><span id="c">$</span> cat jobs.txt
+symfony-php web development 2016-2017
+python-flask web development  2017
+Ethical hacking (black-box testing) / IT security consulting 2018 - now
+Source code analysis (white-box testing) 2018 - now
+5g solutions development (Docker, Kubernetes) 2020 - now
+IT security related to 5g systems 2020 - now<br>
+<span id="a">tihi@mprotect_en</span>:<span id="b">~/about_me</span><span id="c">$</span> cat hobbies.txt
+Linux/UNIX systems, mainly BSD and POSIX based solutions
+Hobby reverse engineering
+"Capture the flag" competitions
+Raspberry pi: arm assembly, GPIO programming, low level socket handling
+
+I don't want to show my companies name and my business emails here ...
+

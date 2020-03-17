@@ -1,0 +1,38 @@
+<span id="a">site@mprotect_hu</span>:<span id="b">~</span><span id="c">$</span> cd az\ oldalról
+<span id="a">site@mprotect_hu</span>:<span id="b">~az oldalról</span><span id="c">$</span> cat az_oldalrol.txt
+Frontend:
+Név:___mprotect.hu_________
+Ipv4:___92.119.123.111______
+Ipv6:___Not_exist___________
+OS:_____FreeBSD12.1_________
+Nyitott portok:_22,80,443,8443__
+Megjegyzés: Ez csak egy proxy szerver ami a domain név és a fix ip miatt kell... A tényleges kiszolgálás nem itt történik.
+Backend:
+Név:___tryt0_h4ck.me_______
+Ipv4:___dynamic_____________
+Ipv6:___dynamic_____________
+OS:_____Arch-linux latest___
+Nyitott portok:_22,80,443,8443__
+Megjegyzés: A fizikai infrastruktúrát így tudom saját magamnál tartani.
+________________________________<br>
+<span id="a">site@mprotect_hu</span>:<span id="b">~/az oldalról</span><span id="c">$</span> feh topológia.png
+ <img src="/mprotect_site.png" alt="mprotect_topológia"> 
+<br>
+<span id="a">site@mprotect_hu</span>:<span id="b">~/az oldalról</span><span id="c">$</span> cat miért.txt
+Miért pont mprotect? - Mert ez a legmenőbb x86 system call...
+Milyen fajta webszerver ez? - Én írtam c-ben, ne csodálkozz hogy semmilyen program nem ismeri fel.
+OMG tényleg C-ben írtál webszervert? - Ja... nem nagy dolog, <a href="https://github.com/tihamerasd/cwebdemo">nézd így kell.</a>
+Miért tettél ilyet? - Túl sok szabadidőm volt... és mert sokat tanultam belőle.
+<br>
+<span id="a">site@mprotect_hu</span>:<span id="b">~/az oldalról</span><span id="c">$</span> cat connected_projects.txt
+<a href="https://github.com/tihamerasd/cwebdemo">A forráskódom code</a>
+<a href="https://github.com/CodeNerve/CodeNerve.github.io"> Terminal kinézet</a>
+<a href="https://2020.angstromctf.com"> Frontend megjelenés</a>
+<a href="https://github.com/ac000/libflate"> dinamikus html renderelő</a>
+<a href="https://github.com/nodejs/http-parser"> http kérés feldolgozó</a>
+<a href="https://github.com/antirez/sds"> string kezelő könyvtár</a>
+<a href="https://github.com/wolfssl"> Kriptográfia</a>
+<a href="https://www.sqlite.org/index.html"> Adatbázis</a>
+
+Ha bármilyen hibát találsz az oldalban kérlek jelezd emailben vagy csinálj issue-t rá githubon. Köszönöm.
+

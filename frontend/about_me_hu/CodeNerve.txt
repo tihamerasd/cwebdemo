@@ -1,0 +1,32 @@
+<span id="a">tihi@mprotect_hu</span>:<span id="b">~</span><span id="c">$</span> cd rólam
+<span id="a">tihi@mprotect_hu</span>:<span id="b">~/rólam</span><span id="c">$</span> cat bemutatkozás_hu.txt
+Név:___ Darai Tihamér__________
+Email:___darai.tihamer@gmail.com
+Telefon:_Kérd el emailben...____
+Github:<a href="https://github.com/tihamerasd">___tihamerasd____________</a>
+________________________________<br>
+<span id="a">tihi@mprotect_hu</span>:<span id="b">~/rólam</span><span id="c">$</span> cat képzettség.txt
+Budapesti Műszaki és Gazdaságtudományi Egyetem - Mérnökinformatikus BSC 2014 - ...
+Offensive-security - OSCP:  In progress 2020
+BME - CrySyS Lab (student core and c0r3dump team)<br>
+<span id="a">tihi@mprotect_hu</span>:<span id="b">~/rólam</span><span id="c">$</span> cat programozási_nyelvek.txt
+__Programming:____Scripting:___
+__- C_______________- ansible__
+__- assembly________- bash_____
+__- python_____________________
+__- php________________________
+_______________________________<br>
+<span id="a">tihi@mprotect_hu</span>:<span id="b">~/rólam</span><span id="c">$</span> cat munkáim.txt
+symfony-php webfejlesztés 2016-2017
+python-flask webfejlesztés  2017
+Etikus hackelés (black-box testing) / IT biztonsági tanácsadás 2018 - jelenleg is
+Forráskód vizsgálat (white-box testing) 2018 - jelenleg is
+5g hálózatok fejlesztése (Docker, Kubernetes) 2020 - jelenleg is
+5g hálózatok biztonsági megoldások tervezése 2020 - jelenleg is<br>
+<span id="a">tihi@mprotect_hu</span>:<span id="b">~/rólam</span><span id="c">$</span> cat érdeklődési_köreim.txt
+Linux/UNIX rendszerek, különösen BSD és POSIX kompatibilis megoldások
+Hobbi reverse engineering
+"Capture the flag" versenyek
+Raspberry pi: arm assembly, GPIO programozás, alacsony szintű socket kezelés
+
+Szándékosan nincsenek kint a cégek nevei és a céges email címeim...
