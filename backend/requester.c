@@ -38,7 +38,7 @@ void urlparser(char* url, size_t len){
 		else i++;
 		}
 	threadlocalhrq.url = sdsnewlen(url+1,i-1);
-	//printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
+	printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
 	
 	while(i<len){
 	i++;
@@ -50,6 +50,8 @@ void urlparser(char* url, size_t len){
 		else i++;
 		}
 
+	if(threadlocalhrq.bodycount>=MAX_LIST_LENGTH-2) {puts("segfault here solved!\n"); return; }
+
 	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsempty();
 	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsempty();
 	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdscatlen(
@@ -60,7 +62,6 @@ void urlparser(char* url, size_t len){
 	separator=&(url[i]);
 	actuallen=i;
 	while( i<len && url[i]!='&'){
-		if(threadlocalhrq.headercount>=MAX_LIST_LENGTH-2) return;
 		if( url[i] == ' ') {
 				threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdscatlen(
 															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
@@ -74,6 +75,7 @@ void urlparser(char* url, size_t len){
 															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
 															separator, i-actuallen);
 	threadlocalhrq.bodycount++;
+	//printf("get_counter: %d\n", threadlocalhrq.bodycount);
 	}
 }
 
@@ -107,7 +109,7 @@ void requestfree(void){
 
 /*parser callback for headers first parameter*/
 int on_header_field (http_parser *_, const char *at, size_t len){
-	if(threadlocalhrq.headercount>MAX_LIST_LENGTH) return 0;
+	if(threadlocalhrq.headercount>=MAX_LIST_LENGTH-2) return 0;
 	threadlocalhrq.req_headers[threadlocalhrq.headercount].key =sdsnewlen(at, len);    
 	threadlocalhrq.req_headers[threadlocalhrq.headercount].value =sdsempty();
 	threadlocalhrq.headercount++;  

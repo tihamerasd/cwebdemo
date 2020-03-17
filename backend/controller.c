@@ -494,9 +494,9 @@ sds languageroute(void){
 	}
 		sds response = NULL;
 		if (strcmp(urldecoded,"HUN")==0)
-			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=HUN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n");
+			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=HUN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n\r\n");
 		else
-			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=EN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n");
+			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=EN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n\r\n");
 		free(urldecoded);
 	return response;
 	}
