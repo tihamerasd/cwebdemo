@@ -31,13 +31,17 @@ sds onepostroute(void){
 	}
 	
 	init_callback_sql();
-	select_by_name(urldecoded);
-	free(urldecoded);
-
 	sds languagecookie=sdsnew("lang");
 	sds cookievalue = get_cookie_by_name(languagecookie);
 	Flate *f = NULL;
 	sds lang=sdsnew("HUN");
+
+	printf("urldecoded: %s\n", urldecoded);
+	
+	if (sdscmp(cookievalue,lang)==0) select_by_name_hu(urldecoded);
+	else select_by_name_en(urldecoded);
+	free(urldecoded);
+
 	if (sdscmp(cookievalue,lang)==0) flateSetFile(&f, "frontend/templates/one_post.html");
 	else flateSetFile(&f, "frontend/templates/one_post_EN.html");
 	sdsfree(lang);
@@ -78,13 +82,15 @@ sds listincategoryroute(void){
 		}
 	}
 	init_callback_sql();
-	select_by_category(urldecoded);
-	free(urldecoded);
-
 	sds languagecookie=sdsnew("lang");
 	sds cookievalue = get_cookie_by_name(languagecookie);
 	Flate *f = NULL;
 	sds lang=sdsnew("HUN");
+	
+	if (sdscmp(cookievalue,lang)==0) select_by_category_hu(urldecoded);
+	else select_by_category_en(urldecoded);
+	free(urldecoded);
+
 	if (sdscmp(cookievalue,lang)==0) flateSetFile(&f, "frontend/templates/all_in_category.html");
 	else flateSetFile(&f, "frontend/templates/all_in_category_EN.html");
 	sdsfree(lang);
@@ -142,34 +148,54 @@ sds saveroute(void){
 			if (memcmp(pwbuff,threadlocalhrq.req_headers[i].value, strlen(pwbuff))!=0) return sdsnew("BAD PASSWORD");	;
 		}
 	}
-
-	char* urldecoded=NULL;
-	sds tittle = NULL;
+///admin/save?title_hun=huntitle&title_en=entitle&category=Security&content_hun=huncontetn%3Cbr%3E&content_eng=huncontetn%3Cbr%3E
+	char* content_hun=NULL;
+	char* content_en=NULL;
+	sds title_hun = NULL;
+	sds title_en = NULL;
 	sds category = NULL;
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
-		if (strcmp(threadlocalhrq.req_body[i].key,"content") == 0){
-			urldecoded = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
-			percent_decode(urldecoded,threadlocalhrq.req_body[i].value);
+		if (strcmp(threadlocalhrq.req_body[i].key,"content_hun") == 0){
+			content_hun = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			percent_decode(content_hun,threadlocalhrq.req_body[i].value);
 			continue;
 		}
-		if (strcmp(threadlocalhrq.req_body[i].key,"tittle") == 0){
+
+		if (strcmp(threadlocalhrq.req_body[i].key,"content_eng") == 0){
+			content_en = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			percent_decode(content_en,threadlocalhrq.req_body[i].value);
+			continue;
+		}
+		
+		if (strcmp(threadlocalhrq.req_body[i].key,"title_hun") == 0){
 			char* decodedtitle= malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
 			memset(decodedtitle,0, sdslen(threadlocalhrq.req_body[i].value));
 			percent_decode(decodedtitle,threadlocalhrq.req_body[i].value);
-			tittle=sdsnew(decodedtitle);
+			title_hun=sdsnew(decodedtitle);
 			free(decodedtitle);
 			continue;
 		}
+
+		if (strcmp(threadlocalhrq.req_body[i].key,"title_en") == 0){
+			char* decodedtitle2= malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
+			memset(decodedtitle2,0, sdslen(threadlocalhrq.req_body[i].value));
+			percent_decode(decodedtitle2,threadlocalhrq.req_body[i].value);
+			title_en=sdsnew(decodedtitle2);
+			free(decodedtitle2);
+			continue;
+		}
+		
 		if (strcmp(threadlocalhrq.req_body[i].key,"category") == 0){
 			category=sdsnew(threadlocalhrq.req_body[i].value);
 			continue;
 		}
 		
 	}
-	insert_post(tittle, category, urldecoded);
-	printf("urldecoded: %s\n",urldecoded);
-	free(urldecoded);
-	sdsfree(tittle);
+	insert_post(title_hun, title_en, category, content_hun, content_en);
+	free(content_en);
+	free(content_hun);
+	sdsfree(title_en);
+	sdsfree(title_hun);
 	sdsfree(category);
 
 	//reset the cache
@@ -358,17 +384,16 @@ sds rootroute(void){
 	//addheader(&response, "Content-Encoding", "deflate\r\n");
 
 	init_callback_sql();
-	select_by_category("CTF");
-
 	sds languagecookie=sdsnew("lang");
 	sds cookievalue = get_cookie_by_name(languagecookie);
 	Flate *f = NULL;
 	sds lang=sdsnew("HUN");
+
+	if (sdscmp(cookievalue,lang)==0) select_by_category_hu("CTF");
+	else select_by_category_en("CTF");
+
 	if (sdscmp(cookievalue,lang)==0) flateSetFile(&f, "frontend/templates/index.html");
 	else flateSetFile(&f, "frontend/templates/index_EN.html");
-	sdsfree(lang);
-	sdsfree(languagecookie);
-	sdsfree(cookievalue);
 	
 	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
@@ -384,7 +409,8 @@ sds rootroute(void){
 	}
 	free_callback_sql();
 	init_callback_sql();
-	select_by_category("Security");
+	if (sdscmp(cookievalue,lang)==0) select_by_category_hu("Security");
+	else select_by_category_en("Security");
 
 	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
@@ -401,7 +427,8 @@ sds rootroute(void){
 
 	free_callback_sql();
 	init_callback_sql();
-	select_by_category("Linux");
+	if (sdscmp(cookievalue,lang)==0) select_by_category_hu("Linux");
+	else select_by_category_en("Linux");
 
 	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
@@ -417,6 +444,10 @@ sds rootroute(void){
 	}
     
 	free_callback_sql();
+
+	sdsfree(lang);
+	sdsfree(languagecookie);
+	sdsfree(cookievalue);
 
 	char *buf = flatePage(f);
 	sds dynpage =sdsnew(buf);

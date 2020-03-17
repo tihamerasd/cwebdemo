@@ -97,8 +97,10 @@ return 0;
 }
 
 /*Insert anarticle from the admin page to the database*/
-void insert_post(sds tittle, sds category, char* content){
-	char *sql = sqlite3_mprintf("INSERT INTO posts (tittle,category,content) VALUES( '%q','%q','%q');", tittle,category,content);   
+void insert_post(sds title_hun, sds title_en, sds category, char* content_hun, char* content_en){
+	char *sql = sqlite3_mprintf(
+	"INSERT INTO posts (title_HUN,title_EN,category,content_HUN, content_EN,created_at) VALUES( '%q','%q','%q', '%q', '%q', CURRENT_TIMESTAMP);",
+			title_hun,title_en,category,content_hun,content_en);   
     int rc = sqlite3_exec(db, sql, 0, 0, &mysql_err_msg);
     if (rc != SQLITE_OK ) {  
         fprintf(stderr, "Failed to select data\n");
@@ -112,8 +114,37 @@ void insert_post(sds tittle, sds category, char* content){
 	}
 	
 /*Select the articles by category*/
-void select_by_category(char* category){
-	char *sql = sqlite3_mprintf("SELECT tittle,category,content from posts WHERE category='%q'", category);   
+void select_by_category_en(char* category){
+	char *sql = sqlite3_mprintf("SELECT title_EN,category,content_EN from posts WHERE category='%q'", category);   
+    int rc = sqlite3_exec(db, sql, callback, 0, &mysql_err_msg);
+    if (rc != SQLITE_OK ) {  
+        fprintf(stderr, "Failed to select data\n");
+        fprintf(stderr, "SQL error: %s\n", mysql_err_msg);
+        sqlite3_free(mysql_err_msg);
+        return;
+    }
+    
+    sqlite3_free(sql);
+	}
+
+/*Select the articles by category*/
+void select_by_category_hu(char* category){
+	char *sql = sqlite3_mprintf("SELECT title_HUN,category,content_HUN from posts WHERE category='%q'", category);   
+    int rc = sqlite3_exec(db, sql, callback, 0, &mysql_err_msg);
+    if (rc != SQLITE_OK ) {  
+        fprintf(stderr, "Failed to select data\n");
+        fprintf(stderr, "SQL error: %s\n", mysql_err_msg);
+        sqlite3_free(mysql_err_msg);
+        return;
+    }
+    
+    sqlite3_free(sql);
+	}
+
+
+/*Select the articles by name*/
+void select_by_name_en(char* tittle){
+	char *sql = sqlite3_mprintf("SELECT title_EN,category,content_EN from posts WHERE title_EN='%q'", tittle);   
     int rc = sqlite3_exec(db, sql, callback, 0, &mysql_err_msg);
     if (rc != SQLITE_OK ) {  
         fprintf(stderr, "Failed to select data\n");
@@ -126,8 +157,8 @@ void select_by_category(char* category){
 	}
 
 /*Select the articles by name*/
-void select_by_name(char* tittle){
-	char *sql = sqlite3_mprintf("SELECT tittle,category,content from posts WHERE tittle='%q'", tittle);   
+void select_by_name_hu(char* tittle){
+	char *sql = sqlite3_mprintf("SELECT title_HUN,category,content_HUN from posts WHERE title_HUN='%q'", tittle);   
     int rc = sqlite3_exec(db, sql, callback, 0, &mysql_err_msg);
     if (rc != SQLITE_OK ) {  
         fprintf(stderr, "Failed to select data\n");
