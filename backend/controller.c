@@ -52,6 +52,7 @@ sds onepostroute(void){
 	flateSetVar(f, "title", kvp_array_sqldata[0].value);
 	flateSetVar(f, "category",kvp_array_sqldata[1].value );
 	flateSetVar(f, "content", kvp_array_sqldata[2].value);
+	flateSetVar(f, "createdat", kvp_array_sqldata[3].value);
 
 	free_callback_sql();
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
@@ -100,14 +101,14 @@ sds listincategoryroute(void){
 	flateSetVar(f, "categorynamezone", "");
 	flateSetVar(f, "categoryname", kvp_array_sqldata[1].value);
 
-	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+	for (int i=0; i<MAXPOSTSSHOWN; i+=4){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
 			sds sdsurl= sdsnew("/onepost?tittle=");
 			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
 
 			flateSetVar(f, "urlsource",sdsurl);
 			flateSetVar(f, "tittle", kvp_array_sqldata[i].value);
-			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateSetVar(f, "createdat", kvp_array_sqldata[i+3].value);
 			flateDumpTableLine(f, "ullist");
 			sdsfree(sdsurl);
 		}
@@ -389,37 +390,37 @@ sds rootroute(void){
 	Flate *f = NULL;
 	sds lang=sdsnew("HUN");
 
-	if (sdscmp(cookievalue,lang)==0) select_by_category_hu("CTF");
-	else select_by_category_en("CTF");
+	if (sdscmp(cookievalue,lang)==0) select_top5_by_category_hu("CTF");
+	else select_top5_by_category_en("CTF");
 
 	if (sdscmp(cookievalue,lang)==0) flateSetFile(&f, "frontend/templates/index.html");
 	else flateSetFile(&f, "frontend/templates/index_EN.html");
 	
-	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+	for (int i=0; i<MAXPOSTSSHOWN; i+=4){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
 			sds sdsurl= sdsnew("/onepost?tittle=");
 			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
 
 			flateSetVar(f, "LINK",sdsurl);
 			flateSetVar(f, "TITTLE", kvp_array_sqldata[i].value);
-			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateSetVar(f, "createdat", kvp_array_sqldata[i+3].value);
 			flateDumpTableLine(f, "listctf");
 			sdsfree(sdsurl);
 		}
 	}
 	free_callback_sql();
 	init_callback_sql();
-	if (sdscmp(cookievalue,lang)==0) select_by_category_hu("Security");
-	else select_by_category_en("Security");
+	if (sdscmp(cookievalue,lang)==0) select_top5_by_category_hu("Security");
+	else select_top5_by_category_en("Security");
 
-	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+	for (int i=0; i<MAXPOSTSSHOWN; i+=4){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
 			sds sdsurl= sdsnew("/onepost?tittle=");
 			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
 
 			flateSetVar(f, "LINK2",sdsurl);
 			flateSetVar(f, "TITTLE2", kvp_array_sqldata[i].value);
-			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateSetVar(f, "createdat", kvp_array_sqldata[i+3].value);
 			flateDumpTableLine(f, "listsecurity");
 			sdsfree(sdsurl);
 		}
@@ -427,17 +428,17 @@ sds rootroute(void){
 
 	free_callback_sql();
 	init_callback_sql();
-	if (sdscmp(cookievalue,lang)==0) select_by_category_hu("Linux");
-	else select_by_category_en("Linux");
+	if (sdscmp(cookievalue,lang)==0) select_top5_by_category_hu("Linux");
+	else select_top5_by_category_en("Linux");
 
-	for (int i=0; i<MAXPOSTSSHOWN; i+=3){
+	for (int i=0; i<MAXPOSTSSHOWN; i+=4){
 		if (kvp_array_sqldata[i].key!=NULL && kvp_array_sqldata[i].value!=NULL){
 			sds sdsurl= sdsnew("/onepost?tittle=");
 			sdsurl =sdscatsds(sdsurl, kvp_array_sqldata[i].value);
 
 			flateSetVar(f, "LINK3",sdsurl);
 			flateSetVar(f, "TITTLE3", kvp_array_sqldata[i].value);
-			//flateSetVar(f, "content", kvp_array_sqldata[i+2].value);
+			flateSetVar(f, "createdat", kvp_array_sqldata[i+3].value);
 			flateDumpTableLine(f, "listnix");
 			sdsfree(sdsurl);
 		}

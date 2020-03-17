@@ -29,11 +29,12 @@ Tittle_EN: <input id ="tittle_EN" type="text" name="tittle_en"><br>
   <option value="Linux">Linux</option>
 </select> 
 		</div>
+		<div id="huncontent">
 			<h2>Content_HUN:</h2>
             <textarea class="content" name="richtext_hun"></textarea>
         </div>
 
-		</div>
+		<div id="encontent">
 			<h2>Content_ENG:</h2>
             <textarea class="content" name="richtext_eng"></textarea>
         </div>
@@ -44,8 +45,8 @@ Tittle_EN: <input id ="tittle_EN" type="text" name="tittle_en"><br>
         });
 
         document.getElementById("SAVE").onclick = function () {
-			var content_eng = document.getElementsByName("richtext_eng")[0].value;
-			var content_hun = document.getElementsByName("richtext_hun")[0].value;
+			var content_eng = document.getElementsByClassName("richText-editor")[1].innerHTML;
+			var content_hun = document.getElementsByClassName("richText-editor")[0].innerHTML;
 			var title_hun = document.getElementById("tittle_HUN").value;
 			var title_en = document.getElementById("tittle_EN").value;
 			var category= $("#categorybox option:selected").text();

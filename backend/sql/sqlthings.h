@@ -24,6 +24,8 @@ void select_by_name_hu(char*);
 void select_by_category_hu(char*);
 void select_by_name_en(char*);
 void select_by_category_en(char*);
+void select_top5_by_category_en(char*);
+void select_top5_by_category_hu(char*);
 
 int percent_decode(char* out, const char* in);
 void init_callback_sql(void);

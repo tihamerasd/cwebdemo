@@ -19,7 +19,7 @@
 #include "backend/webapplication_firewall/simple_waf.h"
 
 #define MAX_EVENTS 1000
-#define MAXBUF  1024
+#define MAXBUF  4096*32
 
 #define handle_error(msg) \
            do { perror(msg); exit(EXIT_FAILURE); } while (0)

@@ -1,10 +1,10 @@
 drop table if exists posts;
-	create table posts (
-	id integer primary key autoincrement,
-	title_HUN text not null,
-	title_EN text not null,
+	CREATE TABLE posts (
+	id INTEGER PRIMARY KEY autoincrement,
+	title_HUN TEXT NOT NULL UNIQUE,
+	title_EN TEXT NOT NULL UNIQUE,
 	category text not null,
-	content_HUN text not null,
-	content_EN text not null,
-	created_at date
+	content_HUN TEXT NOT NULL,
+	content_EN TEXT NOT NULL,
+	created_at DATE
 );
