@@ -20,14 +20,30 @@
 <body>
     <div id="wrapper">
         <div class="bg"></div>
-        <nav id="menubar" data-v-13c56f80="">
-            <ul data-v-13c56f80="">
-                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/" class="router-link-active">Home</a></li>
-				<li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_me_en/en_me_embedded.html" class="">About_me</a></li>
-                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/about_site_en/en_site_embedded.html" class="">About_site</a></li>
-                <li data-v-13c56f80=""><span data-v-13c56f80="">All_posts <span data-v-13c56f80="" class="darr">▼</span></span>
-                    <ul data-v-13c56f80="">
-                        <a data-v-13c56f80="" href="/listincategory?category=CTF">
+        <nav id="menubar">
+                 <li data-v-13c56f80="" style="background= #fff;position: relative; top: 0; left: 10%; transform: none;"><span data-v-13c56f80="">Menu <span data-v-13c56f80="" class="darr">▼</span></span>
+                    <ul data-v-13c56f80="" style="background: #222;">
+						 <a data-v-13c56f80="" href="/">
+                            <li data-v-13c56f80="">Home</li>
+                        </a>
+                        <a data-v-13c56f80="" href="/">
+                            <li data-v-13c56f80="">CHAT</li>
+                        </a>
+                        <a data-v-13c56f80="" href="/about_me_en/en_me_embedded.html">
+                            <li data-v-13c56f80="">About_me</li>
+                        </a>
+                        <a data-v-13c56f80="" href="/about_site_en/en_site_embedded.html">
+                            <li data-v-13c56f80="">About_site</li>
+                        </a>
+                        <p>Language</p>
+                        <a data-v-13c56f80="" href="/language?lang=EN">
+                            <li data-v-13c56f80="">EN</li>
+                        </a>
+                        <a data-v-13c56f80="" href="/language?lang=HUN">
+                            <li data-v-13c56f80="">HUN</li>
+                        </a>
+						<p>All_posts</p>
+						<a data-v-13c56f80="" href="/listincategory?category=CTF">
                             <li data-v-13c56f80="">CTF</li>
                         </a>
                         <a data-v-13c56f80="" href="/listincategory?category=Security">
@@ -36,74 +52,14 @@
                         <a data-v-13c56f80="" href="/listincategory?category=Linux">
                             <li data-v-13c56f80="">*NIX</li>
                         </a>
+
                     </ul>
-                <li data-v-13c56f80=""><a data-v-13c56f80="" href="/challenges" class="router-link-exact-active router-link-active"></a></li>
-                <!----><span data-v-13c56f80="" class="divider"></span>
-                  <li data-v-13c56f80=""><span data-v-13c56f80="">Language <span data-v-13c56f80="" class="darr">▼</span></span>
-                    <ul data-v-13c56f80="">
-                        <a data-v-13c56f80="" href="/language?lang=EN">
-                            <li data-v-13c56f80="">EN</li>
-                        </a>
-                        <a data-v-13c56f80="" href="/language?lang=HUN">
-                            <li data-v-13c56f80="">HUN</li>
-                        </a>
-                    </ul>
-                       <li data-v-13c56f80=""><a data-v-13c56f80="" href="https://mprotect.hu:8443/" class="router-link-active">Chat</a></li>
-                        <li data-v-13c56f80=""><a href="https://freebsd.org/"><div style="float: left;">
-        <img src="/img/powerani.gif" alt="FreeBSD" id="bsdimg">
-    </div></a></li>
-                </li>
-            </ul>
+                  </li>
         </nav>
         <div class="alerts"></div>
-        <main class="challenges" style="">
-            <h1>Mprotect</h1>
-            <section>
-                <ul class="categoryList">
-                    <li class="categoryTitle">
-                        <h2>CTF</h2></li>
-                        <ul class="challengeList">
-                        <!-- #BEGINTABLE listctf -->
-                        <a href="##LINK##">
-							<li class="challenge">
-								<h1 class="title">##TITTLE##</h1>
-								<br><div class="category">##createdat##</div>
-                            </li>
-                        </a>
-						<!-- #ENDTABLE listctf -->
-                    </ul>
-                </ul>
-                <ul class="categoryList">
-                    <li class="categoryTitle">
-                        <h2>Security</h2></li>
-                    <ul class="challengeList">
-						<!-- #BEGINTABLE listsecurity -->
-                        <a href="##LINK2##">
-							<li class="challenge">
-								<h1 class="title">##TITTLE2##</h1>
-								<br><div class="category">##createdat##</div>
-                            </li>
-                        </a>
-						<!-- #ENDTABLE listsecurity -->
-                    </ul>
-                </ul>
-                <ul class="categoryList">
-                    <li class="categoryTitle">
-                        <h2>*NIX</h2></li>
-                    <ul class="challengeList">
-						<!-- #BEGINTABLE listnix -->
-                        <a href="##LINK3##">
-							<li class="challenge">
-								<h1 class="title">##TITTLE3##</h1>
-								<br><div class="category">##createdat##</div>
-                            </li>
-                        </a>
-						<!-- #ENDTABLE listnix -->
-                    </ul>
-                </ul>   
-            </section>
-        </main>
+        
     </div>
+
     	<script language="Javascript">
 		function mobilecheck() {
 		var check = false;
@@ -124,6 +80,7 @@
 		mobileviewsetter();
 		//window.addEventListener('resize', mobileviewsetter);
 	</script>
+    
 </body>
-
 </html>
+

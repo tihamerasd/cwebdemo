@@ -321,13 +321,13 @@ sds initdir_for_static_files(void){
 
 	//check traversal
 	if (path_traversal() == 1) {
-			int compresslen = 0;
-			char *notthis="Go away hacker, I see you trying.";
-			char* compressed_data = malloc(strlen(notthis)+1);
-			compress_content(notthis, strlen(notthis), compressed_data, &compresslen);
-			sds ret = sdsnewlen(compressed_data, compresslen);
-			free(compressed_data);
-			return  ret;
+			//int compresslen = 0;
+			//char *notthis="Go away hacker, I see you trying.";
+			//char* compressed_data = malloc(strlen(notthis)+1);
+			//compress_content(notthis, strlen(notthis), compressed_data, &compresslen);
+			//sds ret = sdsnewlen(compressed_data, compresslen);
+			//free(compressed_data);
+			return  NULL;
 		};
 
 	//converting url path to filesystem path
@@ -345,13 +345,19 @@ sds initdir_for_static_files(void){
 		if (f == NULL)
 			{
 			sdsfree(paramtrimm);
-			int compresslen = 0;
-			char *notthis="It is place for 404! But it's a quite bad place :(";
-			char* compressed_data = malloc(strlen(notthis)+10); //TODO need a normal solution for negative deflate performance
-			compress_content(notthis, strlen(notthis)+1, compressed_data, &compresslen);
-			sds ret = sdsnewlen(compressed_data, compresslen);
-			free(compressed_data);
-			return  ret;
+			//int compresslen = 0;
+			//Headers already added! FAIL
+			//char *notthis="HTTP/1.1 301 Moved Permanently\r\n"
+			//			  "Location: /\r\n"
+		    //              "NOTFOUND_URL: TRUE\r\n"
+		    //              "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+		    //              "Pragma: no-cache\r\n"
+		    //              "Expires: 0\r\n\r\n";
+			//char* compressed_data = malloc(strlen(notthis)+10); //TODO need a normal solution for negative deflate performance
+			//compress_content(notthis, strlen(notthis)+1, compressed_data, &compresslen);
+			//sds ret = sdsnewlen(compressed_data, compresslen);
+			//free(compressed_data);
+			return  NULL;
 			}
 			s = sdsempty();
 		while((c = fgetc(f)) != EOF){
@@ -485,19 +491,25 @@ sds ifconfigroute(void){
 
 sds languageroute(void){
 	char* urldecoded=NULL;
+	sds lang=sdsnew("lang");
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
-		if (strcmp(threadlocalhrq.req_body[i].key,"lang") == 0){
+		if (sdscmp(threadlocalhrq.req_body[i].key,lang) == 0){
 			urldecoded = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
 			percent_decode(urldecoded,threadlocalhrq.req_body[i].value);
 			break;
 		}
 	}
+	sdsfree(lang);
 		sds response = NULL;
-		if (strcmp(urldecoded,"HUN")==0)
+		sds hun=sdsnew("hun");
+		sds sdsurldecoded=sdsnew(urldecoded);
+		if (sdscmp(sdsurldecoded,hun)==0)
 			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=HUN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n\r\n");
 		else
 			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=EN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n\r\n");
 		free(urldecoded);
+		sdsfree(hun);
+		sdsfree(sdsurldecoded);
 	return response;
 	}
 

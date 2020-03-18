@@ -44,8 +44,7 @@ void create_route(sds url, FUNC_PTR action){
 	table.route_count++;
 }
 
-/*checking for created route in controller.c
- * TDOD why return 404 if not found?*/
+/*checking for created route in controller.c*/
 sds do_route(){
 	FUNC_PTR fv;
 	for (int i=0; i<table.route_count; i++)
@@ -53,11 +52,12 @@ sds do_route(){
 			fv=table.routes[i].funcref;
 			return fv();
 			}
-	return sdsnew("HTTP/1.1 200 OK\r\n"
-				  "Server: asm_server\r\n"
-				  "Content-Type:text/html\r\n"
-			      "Connection: Closed\r\n\r\n"
-			      "404 NOT FOUND");
+	return sdsnew("HTTP/1.1 301 Moved Permanently\r\n"
+						  "Location: /\r\n"
+		                  "NOTFOUND_URL: TRUE\r\n"
+		                  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+		                  "Pragma: no-cache\r\n"
+		                  "Expires: 0\r\n\r\n");
 }
 
 /*Initialize cache*/
