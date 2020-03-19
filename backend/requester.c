@@ -20,12 +20,12 @@ for(int i=0; i<threadlocalhrq.headercount; i++){
 				//what if ";" is part of cookie? I drop the end, Is it legal?
 				for(char* looper = startptr+1; (*looper != ';' && looper < endptr); looper++, newlen++);
 				sds ret = sdsnewlen(startptr+1, newlen);
-				printf("Cookie value: %s\n",ret);
+				//printf("Cookie value: %s\n",ret);
 				return ret;
 			}
 		}
 	}
-puts("Cookie is NULL");
+//puts("Cookie is NULL");
 return sdsempty();
 }
 /*parsing the url, getting the path and get variables.*/
@@ -38,7 +38,7 @@ void urlparser(char* url, size_t len){
 		else i++;
 		}
 	threadlocalhrq.url = sdsnewlen(url+1,i-1);
-	printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
+	//printf("threadlocalhrq.url: %s\n", threadlocalhrq.url);
 	
 	while(i<len){
 	i++;
@@ -125,7 +125,7 @@ int on_header_value (http_parser *_, const char *at, size_t len){
 }
 
 /*parser callback for headers done*/
-int on_headers_complete (http_parser *_, const char *at, size_t len){
+//int on_headers_complete (http_parser *_, const char *at, size_t len){
 	/* Request Methods 
 	#define HTTP_METHOD_MAP(XX)         \
 	XX(0,  DELETE,      DELETE)       \
@@ -134,8 +134,8 @@ int on_headers_complete (http_parser *_, const char *at, size_t len){
 	XX(3,  POST,        POST)         \
 	XX(4,  PUT,         PUT)          \*/
  
-	return 0;
-}
+//	return 0;
+//}
 /*parser callback when pointer is on url*/
 int my_url_callback(http_parser *_, const char *at, size_t len){
 	//printf("at: %s\n", at);
@@ -188,7 +188,7 @@ void create_request(sds raw_req){
 	settings.on_url = my_url_callback;
 	settings.on_header_field = on_header_field;
 	settings.on_header_value = on_header_value;
-	settings.on_headers_complete = on_headers_complete;
+	//settings.on_headers_complete = on_headers_complete;
 	//settings.on_body = on_body;
 
 	http_parser *parser = malloc(sizeof(http_parser));

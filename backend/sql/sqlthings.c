@@ -76,7 +76,7 @@ int callback(void *NotUsed, int argc, char **argv,
 		
     }
     //if(selectcounter<MAXPOSTSSHOWN-1) selectcounter++;
-    printf("Db called\n");
+    //printf("Db called\n");
     
     return 0;
 }

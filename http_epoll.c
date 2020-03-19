@@ -75,7 +75,7 @@ void do_use_fd(int epoll_fd, int fd)
 	char buffer[MAXBUF];
 	memset(buffer,0,MAXBUF);
 	int len = recv(fd,buffer, MAXBUF,0);
-	fwrite(buffer,1,len,stdout);
+	//fwrite(buffer,1,len,stdout);
 	if (len<0) return; //error handling
 	int match = simple_waf(buffer, len);
 	if( match == 1){
@@ -157,8 +157,8 @@ void run(int bind_port)
              if (conn_sock == -1)
                  handle_error("accept");
              setnonblocking(conn_sock);
-             printf("%s:%d connected\n",
-                 inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
+             //printf("%s:%d connected\n",
+             //    inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
              ev.events = EPOLLIN | EPOLLET;
              ev.data.fd = conn_sock;
              if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock,

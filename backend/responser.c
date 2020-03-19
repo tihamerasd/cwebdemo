@@ -16,7 +16,7 @@ defstream.next_out = (Bytef *)output; // output char array
 deflateInit(&defstream, 9);
 deflate(&defstream, Z_FINISH);
 deflateEnd(&defstream);
-printf("Deflated size is: %lu\n", (char*)defstream.next_out - output);
+//printf("Deflated size is: %lu\n", (char*)defstream.next_out - output);
 *output_len =(int)((char*)defstream.next_out - output);
 output[*output_len]='\0';
 }
@@ -122,9 +122,13 @@ sds build_response_header(void){
 	
 	sds builder=sdsempty();
 	builder=sdscat(builder,"HTTP/1.1 200 OK\x0d\x0a");
-	builder = sdscat(builder,"Server: asm_server\r\n");
+	builder = sdscat(builder,"X-Content-Type-Options: nosniff\r\n");
+	builder = sdscat(builder,"X-XSS-Protection: 1; mode=block\r\n");
+	builder = sdscat(builder,"X-Frame-Options: deny\r\n");
+	builder = sdscat(builder,"Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n");
 	builder = sdscat(builder,"Content-Encoding: deflate\r\n");
 	builder = sdscat(builder,"Content-Type:");
+
 	sds png =sdsnew("png");
 	sds css =sdsnew("css");
 	sds js =sdsnew("js");

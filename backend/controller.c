@@ -36,7 +36,7 @@ sds onepostroute(void){
 	Flate *f = NULL;
 	sds lang=sdsnew("HUN");
 
-	printf("urldecoded: %s\n", urldecoded);
+	//printf("urldecoded: %s\n", urldecoded);
 	
 	if (sdscmp(cookievalue,lang)==0) select_by_name_hu(urldecoded);
 	else select_by_name_en(urldecoded);
@@ -58,6 +58,10 @@ sds onepostroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html");
+	addheader(&response, "Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+	addheader(&response, "X-Frame-Options", "deny");
+	addheader(&response, "X-XSS-Protection", "1; mode=block");
+	addheader(&response, "X-Content-Type-Options", "nosniff");
 	char *buf = flatePage(f);
 	sds dynpage =sdsnew(buf);
 	free(buf);
@@ -118,6 +122,10 @@ sds listincategoryroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html");
+	addheader(&response, "Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+	addheader(&response, "X-Frame-Options", "deny");
+	addheader(&response, "X-XSS-Protection", "1; mode=block");
+	addheader(&response, "X-Content-Type-Options", "nosniff");
 	char *buf = flatePage(f);
 	sds dynpage =sdsnew(buf);
 	free(buf);
@@ -210,73 +218,6 @@ sds saveroute(void){
 
 return sdsnew("Saved! Yaay, Backend C u! :)");
 	}
-/*A test page for showing how get parameters and template rendering works.*/
-sds adminroute(void){
-
-	sds cachedcontent = serve_from_cache();
-	if (cachedcontent != NULL) return cachedcontent;
-	
-	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
-	addheader(&response, "Connection", "Closed");
-	addheader(&response, "Content-Type", "text/html");
-	//WARNING it's for deflate test
-		addheader(&response, "Content-Encoding", "deflate\r\n");
-
-	
-	Flate *f = NULL;
-    flateSetFile(&f, "frontend/templates/temp.html");
-	flateSetVar(f, "titlezone", "");
-	flateSetVar(f, "title", "DYNAMIC");
-
-	if(0) flateSetVar(f, "arch", "");
-	else  flateSetVar(f, "steampunk", "");
-	
-	flateSetVar(f, "urlsource", "/asd");
-	flateSetVar(f, "listelem", "first elem");
-	flateDumpTableLine(f, "ullist");
-
-	flateSetVar(f, "urlsource", "/nope");
-	flateSetVar(f, "listelem", "second elem");
-	flateDumpTableLine(f, "ullist");
-
-	flateSetVar(f, "urlsource", "/admin");
-	flateSetVar(f, "listelem", "third elem");
-	flateDumpTableLine(f, "ullist");
-
-	for(int i=0; i<threadlocalhrq.bodycount; i++){
-	flateSetVar(f, "key", threadlocalhrq.req_body[i].key);
-	flateSetVar(f, "value", threadlocalhrq.req_body[i].value);
-	flateDumpTableLine(f, "parameters");
-	}
-	
-	char *buf = flatePage(f);
-	sds dynpage =sdsnew(buf);
-	free(buf);
-	flateFreeMem(f);
-
-		//cookie example
-	sds testcookiename=sdsnew("test");
-	sds cookievalue = get_cookie_by_name(testcookiename);
-	if (sdslen(cookievalue) == 0 ) cookievalue = sdscat(cookievalue,"NOTFOUND");
-	dynpage = sdscat(dynpage, "<br><h3>Cookies:</h3><br>");
-	dynpage = sdscatsds(dynpage, testcookiename);
-	dynpage = sdscat(dynpage, ": ");
-	dynpage = sdscatsds(dynpage, cookievalue);
-	sdsfree(testcookiename);
-	sdsfree(cookievalue);
-
-	//deflate test
-	int compresslen = 0;
-	char* compressed_data = malloc(sdslen(dynpage)+1);
-	compress_content(dynpage, sdslen(dynpage), compressed_data, &compresslen);
-	
-	sdsfree(dynpage);
-	response = sdscatlen(response, compressed_data, compresslen);
-	free(compressed_data);
-	
-	//add_to_cache(response);
-	return response;
-	}
 
 /*detecting path traversal, ".." means some hacky thing*/
 int path_traversal(void){
@@ -293,7 +234,7 @@ int path_traversal(void){
 sds serve_from_cache(void){
 	for(int i=0; i<100; i++){
 		if (sdscmp(cache.cachedpages[i].key,threadlocalhrq.rawurl)==0){
-			printf("%s\n","Served from cache");
+			//printf("%s\n","Served from cache");
 			return sdsdup(cache.cachedpages[i].value);
 		}
 	}
@@ -384,12 +325,22 @@ sds rootroute(void){
 
 	//sds cachedcontent = serve_from_cache();
 	//if (cachedcontent != NULL) return cachedcontent;
-	
+
+	//Strict-Transport-Security: max-age=31536000; includeSubDomains
+	//X-Frame-Options: deny
+	//X-XSS-Protection: 1; mode=block //OUTDATED but terrifying...
+	//X-Content-Type-Options: nosniff
+
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
 	addheader(&response, "Connection", "Closed");
 	addheader(&response, "Content-Type", "text/html");
-	//addheader(&response, "Content-Encoding", "deflate\r\n");
-
+	addheader(&response, "Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+	addheader(&response, "X-Frame-Options", "deny");
+	addheader(&response, "X-XSS-Protection", "1; mode=block");
+	addheader(&response, "X-Content-Type-Options", "nosniff");
+	//addheader(&response, "Content-Encoding", "deflate");
+    addheadersdone(&response);
+    
 	init_callback_sql();
 	sds languagecookie=sdsnew("lang");
 	sds cookievalue = get_cookie_by_name(languagecookie);
@@ -501,7 +452,7 @@ sds languageroute(void){
 	}
 	sdsfree(lang);
 		sds response = NULL;
-		sds hun=sdsnew("hun");
+		sds hun=sdsnew("HUN");
 		sds sdsurldecoded=sdsnew(urldecoded);
 		if (sdscmp(sdsurldecoded,hun)==0)
 			response = sdsnew("HTTP/1.1 301 Moved Permanently\r\nLocation: /\r\nSet-Cookie: lang=HUN\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n\r\n");
@@ -515,7 +466,6 @@ sds languageroute(void){
 
 /*register the routes here*/
 void controllercall(){
-	sds sec = sdsnew("admin");
 	sds root = sdsnew("");
 	sds save = sdsnew("admin/save");
 	sds categ = sdsnew("listincategory");
@@ -524,14 +474,12 @@ void controllercall(){
 	sds language = sdsnew("language");
 
 	create_route(categ, &listincategoryroute);
-	create_route(sec, &adminroute);
 	create_route(root, &rootroute);
 	create_route(save, &saveroute);
 	create_route(onepost, &onepostroute);
 	create_route(ifconfig, &ifconfigroute);
 	create_route(language, &languageroute);
 
-	sdsfree(sec);
 	sdsfree(root);
 	sdsfree(save);
 	sdsfree(categ);

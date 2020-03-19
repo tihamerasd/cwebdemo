@@ -49,7 +49,7 @@ if (*count<=nth){
 	}
 
 //for (j = 0; j < *count; j++)
-    printf("tokens: %s\n", tokens[nth]);
+    //printf("tokens: %s\n", tokens[nth]);
 sds ret = sdsdup(tokens[nth]);
 sdsfreesplitres(tokens,*count);
 return ret;
