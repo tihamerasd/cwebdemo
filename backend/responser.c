@@ -142,7 +142,7 @@ sds build_response_header(void){
 	if(sdscmp(extension,css)  == 0) { builder = sdscat(builder,"text/css");                notfoundtype=0; }
 	if(sdscmp(extension,js)   == 0) { builder = sdscat(builder,"text/javascript");         notfoundtype=0; }
 	if(sdscmp(extension,woff) == 0) { builder = sdscat(builder,"application/x-font-woff"); notfoundtype=0; }
-	if(sdscmp(extension,woff) == 0) { builder = sdscat(builder,"image/x-icon");			   notfoundtype=0; }
+	if(sdscmp(extension,ico) == 0) { builder = sdscat(builder,"image/x-icon");			   notfoundtype=0; }
 	if( notfoundtype          == 1)   builder = sdscat(builder,"text/html");
 	builder = sdscat(builder,"\r\n");
 	builder = sdscat(builder,"Connection: close\r\n\r\n");
