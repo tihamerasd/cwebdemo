@@ -97,16 +97,17 @@ function replaceUrls(text) {
 	}
 }
 
-Typer.speed=3;
+Typer.speed=15;
 Typer.file="CodeNerve.txt";
 Typer.init();
  
-var timer = setInterval("t();", 30);
+var timer = setInterval("t();", 10);
 function t() {
 	Typer.addText({"keyCode": 123748});
-	
+
+	if (Typer.text != null){
 	if (Typer.index > Typer.text.length) {
 		clearInterval(timer);
-	}
+	}}
 }
  
