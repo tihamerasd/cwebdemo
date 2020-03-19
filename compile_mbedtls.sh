@@ -36,7 +36,7 @@ cc 	-std=gnu11 \
 	-lsqlite3 \
 	-lmbedtls \
 	-lmbedx509 \
-	-lmbedcrypto \
+	-lmbedcrypto -lcrypto \
 	-O3
 
 valgrind --leak-check=full -s ./mbedtls_server

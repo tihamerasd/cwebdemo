@@ -279,6 +279,19 @@ void add_to_cache(sds content){
 		pthread_mutex_unlock(&cache_locker_mutex);
 
 }
+
+int isDirectory(const char *path)
+{
+     struct stat status;
+     stat(path, &status);
+   
+     if (S_ISDIR(status.st_mode))
+        return 1;
+   
+    return 0;
+   
+}
+
 /*Serve the static files from filesystem to cache and to user
  * returns the content of the file*/
 sds initdir_for_static_files(void){
@@ -298,6 +311,9 @@ sds initdir_for_static_files(void){
 	sds paramtrimm = sdsnew(ROOTPATH); // THIS is webroot, don't keep secure things here...
 	paramtrimm = sdscatsds(paramtrimm,threadlocalhrq.url);
 	//printf("fullpath: %s\n",paramtrimm);
+
+	if (isDirectory(paramtrimm)) return NULL;
+
 
 	sds s= serve_from_cache();
 	if (s!=NULL){sdsfree(paramtrimm); return s;}

@@ -133,22 +133,28 @@ sds build_response_header(void){
 	sds css =sdsnew("css");
 	sds js =sdsnew("js");
 	sds html =sdsnew("html");
-	sds woff =sdsnew("woff");
+	sds woff =sdsnew("woff2");
 	sds ico =sdsnew("ico");
+	sds gif =sdsnew("gif");
+	sds jpg =sdsnew("jpg");
 
 	int notfoundtype=1;
 	if(sdscmp(extension,png)  == 0) { builder = sdscat(builder,"image/png");               notfoundtype=0; }
 	if(sdscmp(extension,html) == 0) { builder = sdscat(builder,"text/html");               notfoundtype=0; }
 	if(sdscmp(extension,css)  == 0) { builder = sdscat(builder,"text/css");                notfoundtype=0; }
 	if(sdscmp(extension,js)   == 0) { builder = sdscat(builder,"text/javascript");         notfoundtype=0; }
-	if(sdscmp(extension,woff) == 0) { builder = sdscat(builder,"application/x-font-woff"); notfoundtype=0; }
+	if(sdscmp(extension,woff) == 0) { builder = sdscat(builder,"application/font-woff2"); notfoundtype=0; }
 	if(sdscmp(extension,ico) == 0) { builder = sdscat(builder,"image/x-icon");			   notfoundtype=0; }
+	if(sdscmp(extension,gif) == 0) { builder = sdscat(builder,"image/gif");			   notfoundtype=0; }
+	if(sdscmp(extension,jpg) == 0) { builder = sdscat(builder,"image/jpeg");			   notfoundtype=0; }
 	if( notfoundtype          == 1)   builder = sdscat(builder,"text/html");
 	builder = sdscat(builder,"\r\n");
 	builder = sdscat(builder,"Connection: close\r\n\r\n");
 
 	sdsfree(extension);
 	sdsfree(ico);
+	sdsfree(gif);
+	sdsfree(jpg);
 	sdsfree(png);
 	sdsfree(html);
 	sdsfree(css);
