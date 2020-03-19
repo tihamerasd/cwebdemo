@@ -10,6 +10,7 @@
 #include "sql/sqlthings.h"
 //#include "../wolfssl/wolfssl/wolfssl/wolfcrypt/sha512.h"
 //#include "../wolfssl/wolfssl/wolfssl/wolfcrypt/sha256.h"
+#include <openssl/sha.h>
 
 #define ROOTPATH "frontend/"
 
@@ -137,24 +138,46 @@ sds listincategoryroute(void){
 	return response;
 }
 
+int simpleSHA512(void* input, unsigned long length, unsigned char* md)
+{
+    SHA512_CTX context;
+    if(!SHA512_Init(&context))
+        return 0;
+
+    if(!SHA512_Update(&context, (unsigned char*)input, length))
+        return 0;
+
+    if(!SHA512_Final(md, &context))
+        return 0;
+
+    return 1;
+}
+
 sds saveroute(void){
 	//TODO very bad, once do it not like a retard...
 	//check authetntication
 	for(int i=0; i<threadlocalhrq.headercount; i++){
 		if(strcmp(threadlocalhrq.req_headers[i].key,"Authentication")==0) {
-			//unsigned char hardcodedhash[SHA256_DIGEST_SIZE];
-			//unsigned char pwhash[SHA256_DIGEST_SIZE];
+			//GET the hash from http
+			unsigned char md[SHA512_DIGEST_LENGTH]; // 32 bytes
+			void * pw_from_header = (void*) threadlocalhrq.req_headers[i].value;
+			simpleSHA512(pw_from_header, sdslen(pw_from_header), md);
+
+			char stored_pw_from_header[(SHA512_DIGEST_LENGTH*2)+1]; //array vs ptr type bypass, fixme later...
+			stored_pw_from_header[SHA512_DIGEST_LENGTH*2]='\0'; 
+			for (int j = 0; j < SHA512_DIGEST_LENGTH; j++) {
+				sprintf(&stored_pw_from_header[j*2], "%02x", md[j]);
+				}
+
+			//get the hash from FILE
 			FILE *fp;
 			//read from file, so if the file length <255 no overflow
 			char pwbuff[255];
+			memset(pwbuff,0,254);
 			fp = fopen("backend/password.txt", "r");
 			fscanf(fp, "%s", pwbuff);
 			fclose(fp);
-
-			//wc_Sha256Hash(pwbuff, strlen(pwbuff), hardcodedhash);
-			//wc_Sha256Hash(threadlocalhrq.req_headers[i].value, sdslen(threadlocalhrq.req_headers[i].value), pwhash);
-			//if (memcmp(hardcodedhash,pwhash, SHA256_DIGEST_SIZE)!=0) return sdsnew("BAD PASSWORD");	;
-			if (memcmp(pwbuff,threadlocalhrq.req_headers[i].value, strlen(pwbuff))!=0) return sdsnew("BAD PASSWORD");	;
+			if (strcmp(pwbuff, stored_pw_from_header) != 0) return sdsnew("BAD PASSWORD");
 		}
 	}
 ///admin/save?title_hun=huntitle&title_en=entitle&category=Security&content_hun=huncontetn%3Cbr%3E&content_eng=huncontetn%3Cbr%3E

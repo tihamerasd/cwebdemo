@@ -4,11 +4,11 @@
         <meta charset="utf-8">
         <title>Admin Posts</title>
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-        <link rel="stylesheet" href="site.css">
-        <link rel="stylesheet" href="richtext.min.css">
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-        <script type="text/javascript" src="jquery.richtext.min.js"></script>
+        <link rel="stylesheet" href="/richtext/font-awesome.min.css">
+        <link rel="stylesheet" href="/richtext/site.css">
+        <link rel="stylesheet" href="/richtext/richtext.min.css">
+        <script type="text/javascript" src="/richtext/jquery.min.js"></script>
+        <script type="text/javascript" src="/richtext/jquery.richtext.min.js"></script>
 
 
 
@@ -31,17 +31,18 @@ Tittle_EN: <input id ="tittle_EN" type="text" name="tittle_en"><br>
 		</div>
 		<div id="huncontent">
 			<h2>Content_HUN:</h2>
-            <textarea class="content" name="richtext_hun"></textarea>
+            <textarea id="richtext_hun"class="content" name="richtext_hun"></textarea>
         </div>
 
 		<div id="encontent">
 			<h2>Content_ENG:</h2>
-            <textarea class="content" name="richtext_eng"></textarea>
+            <textarea id="richtext_eng" class="content" name="richtext_eng"></textarea>
         </div>
         
         <script>
         $(document).ready(function() {
-            $('.content').richText();
+            $('#richtext_hun').richText();
+            $('#richtext_eng').richText();
         });
 
         document.getElementById("SAVE").onclick = function () {
