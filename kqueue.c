@@ -91,9 +91,9 @@ void handleAccept(int efd, int fd) {
     }
 
 void handleRead(int efd, int fd) {
-    char buffer[4096];
+    char buffer[4096*32];
     int len=0;
-    memset(buffer,0,4096);
+    memset(buffer,0,4096*32);
     len=read(fd, buffer, sizeof buffer);
     int match = simple_waf(buffer, len);
 	//int match=0;
@@ -104,14 +104,14 @@ void handleRead(int efd, int fd) {
 		                  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
 		                  "Pragma: no-cache\r\n"
 		                  "Expires: 0\r\n\r\n";
-		write(fd, simpleblock, strlen(simpleblock));
+		send(fd, simpleblock, strlen(simpleblock),0);
 		close(fd);
 		return;
 	}
 	portable_requester(buffer, len);
     sds response=portable_responser();
 	requestfree();
-	write(fd, response, sdslen(response));
+	send(fd, response, sdslen(response),0);
     sdsfree(response);
     close(fd);
 }
@@ -124,7 +124,7 @@ int main() {
 	signal(SIGINT, INThandler);
 	signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
     
-    short port = 80;
+    short port = 8000;
     int epollfd = kqueue();
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr;

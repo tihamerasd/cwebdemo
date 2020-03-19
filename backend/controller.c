@@ -318,32 +318,25 @@ sds initdir_for_static_files(void){
 	sds s= serve_from_cache();
 	if (s!=NULL){sdsfree(paramtrimm); return s;}
 
-		//if not found in cache, serve from file system
-		int c=0;
-		
-		FILE* f = fopen(paramtrimm, "rb");
-		if (f == NULL)
+
+		FILE *fileptr;
+		char *buffer;
+		long filelen;
+		fileptr = fopen(paramtrimm, "rb");
+		if (fileptr == NULL)
 			{
 			sdsfree(paramtrimm);
-			//int compresslen = 0;
-			//Headers already added! FAIL
-			//char *notthis="HTTP/1.1 301 Moved Permanently\r\n"
-			//			  "Location: /\r\n"
-		    //              "NOTFOUND_URL: TRUE\r\n"
-		    //              "Cache-Control: no-cache, no-store, must-revalidate\r\n"
-		    //              "Pragma: no-cache\r\n"
-		    //              "Expires: 0\r\n\r\n";
-			//char* compressed_data = malloc(strlen(notthis)+10); //TODO need a normal solution for negative deflate performance
-			//compress_content(notthis, strlen(notthis)+1, compressed_data, &compresslen);
-			//sds ret = sdsnewlen(compressed_data, compresslen);
-			//free(compressed_data);
 			return  NULL;
 			}
-			s = sdsempty();
-		while((c = fgetc(f)) != EOF){
-			s=sdscatlen(s, &c, 1);
-		}
-		fclose(f);
+
+		fseek(fileptr, 0, SEEK_END);          			// Jump to the end of the file
+		filelen = ftell(fileptr);             			// Get the current byte offset in the file
+		rewind(fileptr);                      			// Jump back to the beginning of the file
+		buffer = (char *)malloc(filelen * sizeof(char));// Enough memory for the file
+		fread(buffer, filelen, 1, fileptr); 			// Read in the entire file
+		fclose(fileptr); // Close the file
+		s=sdsnewlen(buffer, filelen);
+		free(buffer);
 
 		//deflate the query
 		int compresslen = 0;
@@ -352,7 +345,7 @@ sds initdir_for_static_files(void){
 		sdsfree(s);
 		s=sdsnewlen(compressed_data, compresslen);
 		free(compressed_data);
-		//anything happens, put the page into cache
+		//static files are cacheable
 		add_to_cache(s);
 		sdsfree(paramtrimm);
 		return s;
@@ -462,9 +455,9 @@ sds ifconfigroute(void){
 	addheader(&response, "Connection", "close");
 	addheader(&response, "Content-Type", "text/html");
 	addheadersdone(&response);
-	FILE *fp = popen("ifconfig lo "
+	//FILE *fp = popen("ifconfig lo "
 	//FILE *fp = popen("ifconfig wlan0 "
-	//FILE *fp = popen("ifconfig eth0 "
+	FILE *fp = popen("ifconfig eth0 "
 					 "| grep 'inet' "
 					 "| cut -d: -f2 "
 					 "| awk '{print $2}' "
