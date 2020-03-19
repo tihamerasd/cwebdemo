@@ -134,6 +134,7 @@ sds build_response_header(void){
 	sds js =sdsnew("js");
 	sds html =sdsnew("html");
 	sds woff =sdsnew("woff");
+	sds ico =sdsnew("ico");
 
 	int notfoundtype=1;
 	if(sdscmp(extension,png)  == 0) { builder = sdscat(builder,"image/png");               notfoundtype=0; }
@@ -141,11 +142,13 @@ sds build_response_header(void){
 	if(sdscmp(extension,css)  == 0) { builder = sdscat(builder,"text/css");                notfoundtype=0; }
 	if(sdscmp(extension,js)   == 0) { builder = sdscat(builder,"text/javascript");         notfoundtype=0; }
 	if(sdscmp(extension,woff) == 0) { builder = sdscat(builder,"application/x-font-woff"); notfoundtype=0; }
+	if(sdscmp(extension,woff) == 0) { builder = sdscat(builder,"image/x-icon");			   notfoundtype=0; }
 	if( notfoundtype          == 1)   builder = sdscat(builder,"text/html");
 	builder = sdscat(builder,"\r\n");
-	builder = sdscat(builder,"Connection: Closed\r\n\r\n");
+	builder = sdscat(builder,"Connection: close\r\n\r\n");
 
 	sdsfree(extension);
+	sdsfree(ico);
 	sdsfree(png);
 	sdsfree(html);
 	sdsfree(css);

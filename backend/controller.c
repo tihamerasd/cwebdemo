@@ -57,7 +57,7 @@ sds onepostroute(void){
 
 	free_callback_sql();
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
-	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Connection", "close");
 	addheader(&response, "Content-Type", "text/html");
 	addheader(&response, "Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 	addheader(&response, "X-Frame-Options", "deny");
@@ -121,7 +121,7 @@ sds listincategoryroute(void){
     
 	free_callback_sql();
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
-	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Connection", "close");
 	addheader(&response, "Content-Type", "text/html");
 	addheader(&response, "Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 	addheader(&response, "X-Frame-Options", "deny");
@@ -355,7 +355,7 @@ sds rootroute(void){
 	//X-Content-Type-Options: nosniff
 
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
-	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Connection", "close");
 	addheader(&response, "Content-Type", "text/html");
 	addheader(&response, "Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 	addheader(&response, "X-Frame-Options", "deny");
@@ -443,7 +443,7 @@ sds rootroute(void){
 
 sds ifconfigroute(void){
 	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
-	addheader(&response, "Connection", "Closed");
+	addheader(&response, "Connection", "close");
 	addheader(&response, "Content-Type", "text/html");
 	addheadersdone(&response);
 	FILE *fp = popen("ifconfig lo "
