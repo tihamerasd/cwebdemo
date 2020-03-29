@@ -147,7 +147,7 @@ sds build_response_header(void){
 	if(sdscmp(extension,ico) == 0) { builder = sdscat(builder,"image/x-icon");			   notfoundtype=0; }
 	if(sdscmp(extension,gif) == 0) { builder = sdscat(builder,"image/gif");			   notfoundtype=0; }
 	if(sdscmp(extension,jpg) == 0) { builder = sdscat(builder,"image/jpeg");			   notfoundtype=0; }
-	if( notfoundtype          == 1)   builder = sdscat(builder,"text/html");
+	if( notfoundtype          == 1)   builder = sdscat(builder,"application/octet-stream");
 	builder = sdscat(builder,"\r\n");
 	builder = sdscat(builder,"Connection: close\r\n\r\n");
 
