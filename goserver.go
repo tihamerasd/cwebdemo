@@ -10,8 +10,8 @@ import (
 
 /*
 #cgo CFLAGS: -I../DyLib
-#cgo LDFLAGS: -L. -lhttp_parser -lflate -lshared_cweb
-#include "/home/tihi/cweb/sharedinterface.c"
+#cgo LDFLAGS: -L. -lshared_cweb -lflate -lhttp_parser
+#include "sharedinterface.c"
 */
 import "C"
 
@@ -26,7 +26,7 @@ func main() {
 
 	fmt.Printf("%s\n", "INIT done\n")
 
-    cer, err := tls.LoadX509KeyPair("certificate.pem", "key.pem")
+    cer, err := tls.LoadX509KeyPair("/root/fullchain.pem", "/root/privkey.pem")
     if err != nil {
         log.Println(err)
         return
