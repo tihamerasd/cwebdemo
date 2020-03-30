@@ -1,7 +1,7 @@
 #ifndef SQLTHINGS_H
 #define SQLTHINGS_H
 
-#include <sqlite3.h>
+#include "sqlite3.h"
 #include <stdio.h>
 #include "../dynamic_string/sds.h"
 #include "../keyvalue.h"

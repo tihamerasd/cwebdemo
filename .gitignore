@@ -7,3 +7,5 @@ https_server
 backend/password.txt
 backend/sql/database.db
 http_epoll
+goserver
+libshared_cweb.so

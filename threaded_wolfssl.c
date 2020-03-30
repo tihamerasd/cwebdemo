@@ -164,8 +164,13 @@ if (len<0) {
 		response=portable_responser();
 		requestfree();
 	}
-    len = sdslen(response);
-    ret = wolfSSL_write(ssl, response, len);
+
+	len = sdslen(response);
+	 do {
+        ret = wolfSSL_write(ssl, response, len);
+       
+    } while (wolfSSL_want_write(ssl));
+
 	sdsfree(response);
   
         

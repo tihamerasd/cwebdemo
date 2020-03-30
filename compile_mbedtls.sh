@@ -3,8 +3,9 @@
 #WARNING
 echo "WARNING! ARM-Mbedtls dependency!"
 
-#cc="clang"
-cc="gcc"
+cc="clang"
+#cc="gcc"
+#cc="musl-clang"
 
 rm ./mbedtls_server
 #https epoll, threading, nonblocking-socket
@@ -21,6 +22,7 @@ cc 	-std=gnu11 \
 	./libflate.a\
 	./backend/webapplication_firewall/simple_waf.c \
 	./backend/sql/sqlthings.c \
+	./backend/sql/sqlite3.c \
 	./backend/dynamic_string/sds.c \
 	./backend/keyvalue.c \
 	./backend/responser.c \
@@ -33,11 +35,13 @@ cc 	-std=gnu11 \
 	-pthread \
 	-lm \
 	-lz \
-	-lsqlite3 \
+	-lrt \
 	-lmbedtls \
 	-lmbedx509 \
-	-lmbedcrypto -lcrypto \
-	-O3
+	-lmbedcrypto \
+	-O3 \
+	-static \
+	-ldl
 
-valgrind --leak-check=full -s ./mbedtls_server
+#valgrind --leak-check=full -s ./mbedtls_server
 #./mbedtls_server
