@@ -10,7 +10,7 @@ import (
 
 /*
 #cgo CFLAGS: -I../DyLib
-#cgo LDFLAGS: -L. -lshared_cweb -lflate -lhttp_parser
+#cgo LDFLAGS: -L. -lshared_cweb -lflate -lhttp_parser -lcrypto
 #include "sharedinterface.c"
 */
 import "C"
@@ -26,7 +26,7 @@ func main() {
 
 	fmt.Printf("%s\n", "INIT done\n")
 
-    cer, err := tls.LoadX509KeyPair("/root/fullchain.pem", "/root/privkey.pem")
+    cer, err := tls.LoadX509KeyPair("certificate.pem", "key.pem")
     if err != nil {
         log.Println(err)
         return
