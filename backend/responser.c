@@ -137,6 +137,7 @@ sds build_response_header(void){
 	sds ico =sdsnew("ico");
 	sds gif =sdsnew("gif");
 	sds jpg =sdsnew("jpg");
+	sds svg =sdsnew("svg");
 
 	int notfoundtype=1;
 	if(sdscmp(extension,png)  == 0) { builder = sdscat(builder,"image/png");               notfoundtype=0; }
@@ -144,9 +145,10 @@ sds build_response_header(void){
 	if(sdscmp(extension,css)  == 0) { builder = sdscat(builder,"text/css");                notfoundtype=0; }
 	if(sdscmp(extension,js)   == 0) { builder = sdscat(builder,"text/javascript");         notfoundtype=0; }
 	if(sdscmp(extension,woff) == 0) { builder = sdscat(builder,"application/font-woff2"); notfoundtype=0; }
-	if(sdscmp(extension,ico) == 0) { builder = sdscat(builder,"image/x-icon");			   notfoundtype=0; }
+	if(sdscmp(extension,ico) == 0) { builder = sdscat(builder,"image/x-icon");		   notfoundtype=0; }
 	if(sdscmp(extension,gif) == 0) { builder = sdscat(builder,"image/gif");			   notfoundtype=0; }
-	if(sdscmp(extension,jpg) == 0) { builder = sdscat(builder,"image/jpeg");			   notfoundtype=0; }
+	if(sdscmp(extension,jpg) == 0) { builder = sdscat(builder,"image/jpeg");		   notfoundtype=0; }
+	if(sdscmp(extension,svg) == 0) { builder = sdscat(builder,"image/svg+xml"); 		notfoundtype=0; }
 	if( notfoundtype          == 1)   builder = sdscat(builder,"application/octet-stream");
 	builder = sdscat(builder,"\r\n");
 	builder = sdscat(builder,"Connection: close\r\n\r\n");
@@ -160,5 +162,6 @@ sds build_response_header(void){
 	sdsfree(css);
 	sdsfree(woff);
 	sdsfree(js);
+        sdsfree(svg);
 	return builder;
 	}

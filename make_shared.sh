@@ -1,7 +1,7 @@
 #!/bin/sh
 
-#cc="clang"
-cc="gcc"
+cc="clang"
+#cc="gcc"
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/cwebdemo/
 

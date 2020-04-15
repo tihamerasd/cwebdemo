@@ -26,14 +26,14 @@ func main() {
 
 	fmt.Printf("%s\n", "INIT done\n")
 
-    cer, err := tls.LoadX509KeyPair("certificate.pem", "key.pem")
+    cer, err := tls.LoadX509KeyPair("/root/fullchain.pem", "/root/privkey.pem")
     if err != nil {
         log.Println(err)
         return
     }
 
     config := &tls.Config{Certificates: []tls.Certificate{cer}}
-    ln, err := tls.Listen("tcp", ":8443", config) 
+    ln, err := tls.Listen("tcp", ":443", config) 
     if err != nil {
         log.Println(err)
         return
