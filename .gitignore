@@ -1,11 +1,3 @@
-*.o
-*.a
-asmengine_server
-wss_socket
-singlethread_https_server
-https_server
-backend/password.txt
-backend/sql/database.db
-http_epoll
-goserver
-libshared_cweb.so
+build/*
+dev/db/password.txt
+dev/db/database.db
