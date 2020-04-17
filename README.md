@@ -33,15 +33,15 @@ Haha! Forget it, never will work.
 
 In dev/db there is a db_init.sh file use that to create my demo schema. In real project you should do something similar.
 
-dev: The directory for developers.
-	db: database related things
-	fronted: What do you think? :)
-	routing: It contains your controller for dynamic query handling
-server: it's responsible for sockets and query serving
-	more details later
-build: the directory where the bnaries are stored
-retired_servers: a lot of fun technique to handle sockets and https query serving,
-	but actually these are outdated, you can't easily recompile them	
+dev: The directory for developers. <br>
+---db: database related things <br>
+---fronted: What do you think? :) <br>
+---routing: It contains your controller for dynamic query handling <br>
+server: it's responsible for sockets and query serving <br>
+---more details later <br>
+build: the directory where the bnaries are stored <br>
+retired_servers: a lot of fun technique to handle sockets and https query serving, <br>
+but actually these are outdated, you can't easily recompile them <br>
 
 Create route:
 1. Check the controllercall() function in dev/routing/ and you will see how to add new routes.
