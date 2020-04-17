@@ -20,6 +20,7 @@ cc -shared -fPIC -o ./build/libshared_cweb.so -I -std=gnu11 -pedantic \
 	./server/backend/dynamic_string/sds.c ./server/backend/keyvalue.c \
 	./server/backend/responser.c \
 	./server/backend/requester.c \
+	./server/backend/controller.c \
 	-Wall -I/usr/local/include -O3 -pthread -L/usr/local/lib -lm -lsqlite3 -lz
 
 go build -o ./build/goserver ./server/socket_handlers/goserver.go

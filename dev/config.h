@@ -12,6 +12,10 @@
 //QUERY CACHE SIZE (defines how many queries stored in the Cache ringbuffer)
 #define CACHESIZE 100
 
+//DATABASE FILE
+#define DATABASEFILE "/home/tihi/cweb/dev/db/database.db"
+#define MAXPOSTSSHOWN 100
+
 /** only for HTTP servers **/
 //SOCKET READ SIZE 
 #define MAXBUF  4096*32

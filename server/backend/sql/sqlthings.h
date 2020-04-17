@@ -6,9 +6,7 @@
 #include "../dynamic_string/sds.h"
 #include "../keyvalue.h"
 #include "threads.h"
-
-#define DATABASEFILE "/home/tihi/cweb/dev/db/database.db"
-#define MAXPOSTSSHOWN 100
+#include "../../../dev/config.h"
 
 sqlite3 *db;
 extern char *mysql_err_msg;
