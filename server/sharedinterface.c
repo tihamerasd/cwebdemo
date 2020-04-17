@@ -13,7 +13,7 @@
 #include "./backend/keyvalue.h"
 #include "./backend/requester.h"
 #include "./backend/responser.h"
-#include "./backend/controller.c"
+#include "./backend/controller.h"
 #include "./backend/sql/sqlthings.h"
 #include "backend/webapplication_firewall/simple_waf.h"
 #include "../dev/config.h"

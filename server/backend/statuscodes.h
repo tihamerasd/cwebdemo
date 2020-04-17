@@ -6,7 +6,7 @@
 //char* processing  "102 Processing";
 
 //    2×× Success
-char* okcode ="HTTP/1.1 200 OK\r\n";
+//char* okcode ="HTTP/1.1 200 OK\r\n";
 //    201 Created
 //    202 Accepted
 //    203 Non-authoritative Information
@@ -32,7 +32,7 @@ char* okcode ="HTTP/1.1 200 OK\r\n";
 //    401 Unauthorized
 //    402 Payment Required
 //    403 Forbidden
-char* notfound = "HTTP/1.1 404 Not Found\r\n";
+//char* notfound = "HTTP/1.1 404 Not Found\r\n";
 //    405 Method Not Allowed
 //    406 Not Acceptable
 //    407 Proxy Authentication Required
@@ -60,7 +60,7 @@ char* notfound = "HTTP/1.1 404 Not Found\r\n";
 //    499 Client Closed Request
 
 //    5×× Server Error
-char* error ="HTTP/1.1 500 Internal Server Error\r\n";
+//char* error ="HTTP/1.1 500 Internal Server Error\r\n";
 //    501 Not Implemented
 //    502 Bad Gateway
 //    503 Service Unavailable

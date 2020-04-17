@@ -44,4 +44,9 @@
 //DYNAMIC urls, if you have more dynamic url, the app will crash
 #define ROUTEARRAYSIZE 200
 
+//WEB APPLICATION FIREWALL SETTINGS
+#define BANNLEN 3 //number of banned words
+//array to bann
+#define BANNTHIS "../","..%2F","templates/"
+
 #endif

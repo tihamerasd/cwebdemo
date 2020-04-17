@@ -15,12 +15,9 @@
 #include "../backend/dynamic_string/sds.h"
 #include "../backend/keyvalue.h"
 #include "../backend/requester.h"
-#include "../backend/responser.h"
-#include "../backend/controller.c"
+#include "../backend/controller.h"
 #include "../backend/sql/sqlthings.h"
 #include "../backend/webapplication_firewall/simple_waf.h"
-#include "../backend/webapplication_firewall/simple_waf.h"
-
 
 #define handle_error(msg) \
            do { perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -127,8 +124,13 @@ void run(int bind_port)
     my_addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(listen_sock , (struct sockaddr*)&my_addr,
-         sizeof my_addr) != 0)
+         sizeof my_addr) != 0){
+		for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
+		globalfree_cache();
+		sqlite_close_function();
+		clear_file_extension();
         handle_error("bind");
+	}
 
     if(listen(listen_sock, 20) != 0)
         handle_error("listen");

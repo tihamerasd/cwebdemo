@@ -141,13 +141,6 @@ sds sdsnewlen(const void *init, size_t initlen) {
     if (initlen && init)
         memcpy(s, init, initlen);
     s[initlen] = '\0';
-
-//CUSTOM CODE for typical http value sizes;
-//probably cause memleak
-//int l = sdslen(s);
-//if (l<80) s = sdsMakeRoomFor(s, 80);
-//if (l>80 && l<1000) s = sdsMakeRoomFor(s, 1000);
-//if (l>1000 && l<5000) s = sdsMakeRoomFor(s, 5000);   
     return s;
 }
 
@@ -610,6 +603,10 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
     long i;
     va_list ap;
 
+    /* To avoid continuous reallocations, let's start with a buffer that
+     * can hold at least two times the format string itself. It's not the
+     * best heuristic but seems to work in practice. */
+    s = sdsMakeRoomFor(s, initlen + strlen(fmt)*2);
     va_start(ap,fmt);
     f = fmt;    /* Next format specifier byte to process. */
     i = initlen; /* Position of the next byte to write to dest str. */

@@ -1,11 +1,15 @@
 #include "simple_waf.h"
 #define _GNU_SOURCE
 #include <string.h>
+#include "../../../dev/config.h"
+
+const char *banned[BANNLEN]={BANNTHIS};
 
 int simple_waf(char* input, int len){
 	int match=0;
-	if(memmem(input,len,"../",3) != NULL) match=1;
-	if(memmem(input,len,"..%2F",5) != NULL) match=1;
-	if(memmem(input,len,"templates/",10) != NULL) match=1;
+	for (int i=0; i<BANNLEN; i++){
+		if(memmem(input,len,banned[i],strlen(banned[i])) != NULL) match=1;
+	}
+
 	return match;
 }

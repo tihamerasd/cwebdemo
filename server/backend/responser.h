@@ -26,7 +26,7 @@ void globalfree_cache(void);
 
 typedef struct route{
 sds url;
-void* funcref; //pointers for
+FUNC_PTR funcref; //pointers for
 } route;
 
 typedef struct routing_table{
@@ -38,7 +38,7 @@ routing_table table;
 
 int check_route(void);
 sds do_route(void);
-void create_route(sds url, FUNC_PTR);
+void create_route(char* url, FUNC_PTR);
 sds build_response_header(void);
 void addheader(sds*, char*, char*);
 sds adddefaultheaders(void);

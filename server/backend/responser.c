@@ -35,9 +35,9 @@ int check_route(void){
 
 /*callback function for registering route
  * here will be executed your functions registered inn controller.c*/
-void create_route(sds url, FUNC_PTR action){
+void create_route(char* url, FUNC_PTR action){
 	route newroute;
-	newroute.url = sdsdup(url);
+	newroute.url = sdsnew(url);
 	newroute.funcref=action;
 	
 	table.routes[table.route_count]=newroute;
@@ -81,7 +81,7 @@ sds adddefaultheaders(void){
 return build_response_header();
 	}
 
-/*setting response code, still plain string parsing, watch statuscodes.h for values.*/
+/*setting response code, still plain string parsing, check statuscodes for values.*/
 sds setresponsecode(char* top){
 	sds s=sdsnew(top);
 	return s;
@@ -118,7 +118,7 @@ void init_file_extension(void){
 	extensions.file_extension[i++].key = sdsnew("jpg"); extensions.file_extension[7].value = sdsnew("image/jpeg");
 	extensions.file_extension[i++].key = sdsnew("svg"); extensions.file_extension[8].value = sdsnew("image/svg+xml");
 
-	for (i; i<MAX_FILE_EXTENSIONS; i++){
+	for (; i<MAX_FILE_EXTENSIONS; i++){
 	extensions.file_extension[i].key=sdsempty();
 	extensions.file_extension[i].value=sdsempty();
 	}
