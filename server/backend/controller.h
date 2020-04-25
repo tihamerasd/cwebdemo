@@ -20,13 +20,5 @@ sds serve_from_cache(void);
 void add_to_cache(sds);
 int path_traversal(void);
 int isDirectory(const char*);
-int simpleSHA512(void*, unsigned long, unsigned char*);
-sds onepostroute(void);
-sds listincategoryroute(void);
-sds saveroute(void);
-sds rootroute(void);
-sds ifconfigroute(void);
-sds languageroute(void);
-void controllercall(void);
 
 #endif 

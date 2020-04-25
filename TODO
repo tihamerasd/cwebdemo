@@ -1,1 +1,10 @@
+BSD kqueue is broken on different ways.
+Create Documentation with pictures and with more details
+Clear the code and the comments
+Implement a fuzzer, looking for memory leaks
+Rewrite/Port the server to a linux kernel-module. (Yes I know it's a big one.)
+The linux/tls.h maybe interesting alternative against userland crypto. https://github.com/torvalds/linux/blob/v4.13/Documentation/networking/tls.txt
+There's already a demo websocket implementation in retired_servers, synchronize that with backend.
+
+I should use imports in html templates instead of this:
 find ./ -type f -exec sed -i 's/https:\/\/mprotect.hu:8443\//\/index.html/g' {} \;
