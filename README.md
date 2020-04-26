@@ -27,7 +27,7 @@ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certifi
 -- kqueue is an UNIX based nonblocking single thread server. 
 --  make_shared is a platform and socket independent solution, actually built with a go based https socket.
 ```sh
-./compile_kqueue.sh
+./compile_http_kqueue.sh
 #or
 #pkg install go
 ./make_shared.sh
@@ -54,6 +54,7 @@ In dev/db there is a db_init.sh file, use that to create my demo schema. In real
 - After that, define the function which is shown by the function pointer.
 - Implement your logic there. (See available helper functions later.)
 - You need to return with malloc-ed sds which contains the heaeders and the html too.
+- add demoroute to the header file
 #### Example
 ```c
 sds demoroute(void){
@@ -144,6 +145,7 @@ void compress_content(char*, int, char*, int*);
 - you need an existing db file, which you can define in the config file.
 - The return value is stored in a global object
 - sqlite is able to build with threadsafe options, but i'm not sure this happens in amalgamation build, while it's single thread probably ok, need some more information for later usage...
+- dont forget to add your functions to header file
 #### example
 ```c
 /*Select the articles by category*/
@@ -178,8 +180,10 @@ for (int i=0; i<MAXPOSTSSHOWN; i+=4){
 		}
 ```
 
+##Debug advices:
+Actually projects are configured for production environment (Full RELRO, PIE, NX-enabled, -fstack-protector-strong), remove at least "-s" flag for function names in the binary and a usefull backtrack.
+
 #### Known issues:
-- kqueue event server needs some work
 - In HTTP servers there is only one read, not a "loop while not end". Yes, it's for security reason, and not compatible with rfc. I won't change it. Add a new socket handler if it's not ok for you.
 - uncomfortable post saving in demo
 

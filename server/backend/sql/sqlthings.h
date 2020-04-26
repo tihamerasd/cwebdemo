@@ -7,6 +7,7 @@
 #include "../keyvalue.h"
 #include "threads.h"
 #include "../../../dev/config.h"
+#include "../../../dev/db/sql_queries.h"
 
 sqlite3 *db;
 extern char *mysql_err_msg;

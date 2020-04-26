@@ -1,3 +1,5 @@
+#include "sql_queries.h"
+
 /*DANGER be carefull, the kvp_array is an array of keyvalue pairs, but the return object is 3 piece
  of key-value object, need too loop it with i+=3 and handle inside
  Once I should refactor...*/

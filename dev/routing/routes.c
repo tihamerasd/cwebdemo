@@ -1,3 +1,5 @@
+#include "routes.h"
+
 char* okcode ="HTTP/1.1 200 OK\r\n";
 
 int simpleSHA512(void* input, unsigned long length, unsigned char* md)

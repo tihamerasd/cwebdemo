@@ -1,5 +1,4 @@
 #include "controller.h"
-#include "../../dev/routing/routes.c"
 
 /*detecting path traversal, ".." means some hacky thing*/
 int path_traversal(void){

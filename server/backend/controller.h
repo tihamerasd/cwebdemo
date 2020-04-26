@@ -14,11 +14,14 @@
 #include "responser.h"
 #include <openssl/sha.h>
 #include <sys/stat.h>
+#include "../../dev/routing/routes.h"
 
+void controllercall(void);
 sds initdir_for_static_files(void);
 sds serve_from_cache(void);
 void add_to_cache(sds);
 int path_traversal(void);
 int isDirectory(const char*);
+
 
 #endif 

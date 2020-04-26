@@ -1,5 +1,4 @@
 #include "sqlthings.h"
-#include "../../../dev/db/sql_queries.c"
 
 char *mysql_err_msg = 0;
 thread_local keyvaluepair kvp_array_sqldata[MAXPOSTSSHOWN];
