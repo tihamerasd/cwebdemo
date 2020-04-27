@@ -1,7 +1,10 @@
 #!/bin/bash
 
 #clean build
+rm -r /tmp/tmpcweb
 rm -r ./../build
+
+./update.sh
 
 #update libflate
 wget https://raw.githubusercontent.com/ac000/libflate/master/flate.c -o ../server/backend/html_templater/flate.c
@@ -17,5 +20,3 @@ wget https://raw.githubusercontent.com/antirez/sds/master/sds.c -o ../server/bac
 wget https://raw.githubusercontent.com/antirez/sds/master/sdsalloc.h -o ../server/backend/dynamic_string/sdsalloc.h
 
 echo "sqlite-amalgamation update is not implemented, pls do it manually. https://www.sqlite.org/download.html"
-
-./update.sh

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 rm -r ./../build
+rm -r/tmp/tmpcweb
 startpath=`pwd`
 mkdir /tmp/tmpcweb
 cd /tmp/tmpcweb

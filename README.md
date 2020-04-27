@@ -40,14 +40,17 @@ In dev/db there is a db_init.sh file, use that to create my demo schema. In real
 
 ## Directory structure:
 - dev: The directory for developers. Implement your functions here.
---- db: database related things
---- fronted: What do you think? :)
---- routing: It contains your controller for dynamic query handling
+- - db: database related things
+- - fronted: What do you think? :)
+- - routing: It contains your controller for dynamic query handling
 - server: It's responsible for sockets and query serving
---- the core server which provides you the functions
+- - the core server which provides you the functions
 - build: the directory where the bnaries are stored
 - retired_servers: a lot of fun technique to handle sockets and https query serving, but actually these are outdated, you can't easily recompile them. Maybe try to rollback to a later version then they are in the project home directory
 - management: This directory stores helper scripts for updating and clearing your repository. WARNING! store your code before you run, this maybe not stable
+- - update.sh: I guess you understand...
+- - unstable_update.sh: updates git projects included to my project
+- - init_empty_project.sh : please make sure you understand the topology and compiler errors.
 
 ## Create route:
 - Check the controllercall() function in dev/routing/ and you will see how to add new routes.
