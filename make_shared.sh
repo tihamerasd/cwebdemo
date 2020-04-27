@@ -8,9 +8,9 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/tihi/cweb/build
 rm -r ./build
 mkdir build
 
-$cc -o ./build/flate.o ./server/backend/html_templater/flate.c -c -I. -O3
+$cc -fPIC -o ./build/flate.o ./server/backend/html_templater/flate.c -c -I. -O3
 ar -r ./build/libflate.a ./build/flate.o
-$cc -o ./build/http_parser.o ./server/backend/http_parser/http_parser.c -c -I. -O3
+$cc -fPIC -o ./build/http_parser.o ./server/backend/http_parser/http_parser.c -c -I. -O3
 ar -r ./build/libhttp_parser.a ./build/http_parser.o
 $cc -g -Wl,-z,relro,-z,now \
 	-fstack-protector-strong \

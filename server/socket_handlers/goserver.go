@@ -27,7 +27,6 @@ func main() {
 
 	cport := C.extern_port_to_go()
 	goport := C.GoString(cport)
-	C.free(unsafe.Pointer(cport))
 
 	certfile := C.GoString(C.extern_cert_to_go())
 
@@ -38,6 +37,8 @@ func main() {
 	fmt.Printf("PORT: %s\n", goport)
  
     cer, err := tls.LoadX509KeyPair(certfile, keyfile)
+
+	C.free(unsafe.Pointer(cport))
 
     if err != nil {
         log.Println(err)

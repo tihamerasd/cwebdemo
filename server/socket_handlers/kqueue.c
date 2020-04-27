@@ -118,6 +118,7 @@ void handleRead(int efd, int fd) {
 
 int main() {
 	controllercall();
+	init_file_extension();
 	globalinit_cache();
 	sqlite_init_function();
 	init_callback_sql();
@@ -140,8 +141,8 @@ int main() {
     updateEvents(epollfd, listenfd, kReadEvent, false);
     
     while(out != 1) {
-		struct kevent activeEvs[KMAXEVENTS];
-		int n = kevent(epollfd, NULL, 0, activeEvs, KMAXEVENTS, 0);
+		struct kevent activeEvs[MAX_EVENTS];
+		int n = kevent(epollfd, NULL, 0, activeEvs, MAX_EVENTS, 0);
 		printf("epoll_wait return %d\n", n);
 		for (int i = 0; i < n; i ++) {
 			int fd = (int)(intptr_t)activeEvs[i].udata;
@@ -158,5 +159,6 @@ int main() {
     for(int i=0; i<table.route_count; i++) sdsfree(table.routes[i].url);
 	globalfree_cache();
 	sqlite_close_function();
+	clear_file_extension();
     return 0;
 }

@@ -96,6 +96,7 @@ char* extern_port_to_go(void){
 	char *str =malloc(7);
 	memset(str,0,7);
 	str[0]=':';
+	printf("in C returned: %s\n",str);
 	sprintf(str+1, "%d", PORT);
 	return str;
 	}

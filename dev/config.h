@@ -4,7 +4,7 @@
 //HTTPS server means goserver
 
 //PORT
-#define PORT 8000
+#define PORT 8001
 
 //DOCUMENT ROOT
 #define ROOTPATH "/home/tihi/cweb/dev/frontend/"

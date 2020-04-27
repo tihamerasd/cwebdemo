@@ -6,9 +6,9 @@ cc="clang"
 rm -r ./build
 mkdir build
 
-$cc -O3 -o ./build/flate.o ./server/backend/html_templater/flate.c -c -I.
+$cc -fPIC -O3 -o ./build/flate.o ./server/backend/html_templater/flate.c -c -I.
 ar -r ./build/libflate.a ./build/flate.o
-$cc -O3 -o ./build/http_parser.o ./server/backend/http_parser/http_parser.c -c -I.
+$cc -fPIC -O3 -o ./build/http_parser.o ./server/backend/http_parser/http_parser.c -c -I.
 $cc -g -Wl,-z,relro,-z,now \
  -s -std=gnu11 -pedantic \
  -fstack-protector-strong \
@@ -29,4 +29,4 @@ $cc -g -Wl,-z,relro,-z,now \
  -Wall -I/usr/local/include -O3 -L./build -pthread -lcrypto -lz -ldl
 
 #valgrind --leak-check=yes -s ./http_kqueue
-#./http_kqueue
+./build/http_kqueue
