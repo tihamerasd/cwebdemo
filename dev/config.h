@@ -19,7 +19,7 @@
 /** only for HTTP servers **/
 //SOCKET READ SIZE 
 #define MAXBUF  4096*32
-//MAXIMUM NUMBER of EPOLL EVEVENTS 
+//MAXIMUM NUMBER of EPOLL/kqueue EVEVENTS 
 #define MAX_EVENTS 1000
 
 /** only for HTTPS server **/

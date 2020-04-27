@@ -10,15 +10,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "./backend/keyvalue.h"
-#include "./backend/requester.h"
-#include "./backend/responser.h"
-#include "./backend/controller.c"
-#include "./backend/sql/sqlthings.h"
+#include "../../dev/config.h"
+#include "../backend/dynamic_string/sds.h"
+#include "../backend/keyvalue.h"
+#include "../backend/requester.h"
+#include "../backend/controller.h"
+#include "../backend/sql/sqlthings.h"
+#include "../backend/webapplication_firewall/simple_waf.h"
 #include <signal.h>
-#include "backend/webapplication_firewall/simple_waf.h"
 
-#define KMAXEVENTS 10000
 const int kReadEvent = 1;
 
 int out=0; //global variable gives information about if sigint happened on server side (exit method).
@@ -91,9 +91,9 @@ void handleAccept(int efd, int fd) {
     }
 
 void handleRead(int efd, int fd) {
-    char buffer[4096*32];
+    char buffer[MAXBUF];
     int len=0;
-    memset(buffer,0,4096*32);
+    memset(buffer,0,MAXBUF);
     len=read(fd, buffer, sizeof buffer);
     int match = simple_waf(buffer, len);
 	//int match=0;
@@ -124,7 +124,7 @@ int main() {
 	signal(SIGINT, INThandler);
 	signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
     
-    short port = 8000;
+    short port = PORT;
     int epollfd = kqueue();
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr;

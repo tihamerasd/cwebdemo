@@ -12,7 +12,7 @@ $cc -O3 -o ./build/http_parser.o ./server/backend/http_parser/http_parser.c -c -
 $cc -g -Wl,-z,relro,-z,now \
  -s -std=gnu11 -pedantic \
  -fstack-protector-strong \
- -o ./build/kqueue_epoll \
+ -o ./build/http_kqueue \
  ./server/socket_handlers/kqueue.c \
  ./build/http_parser.o \
  ./build/flate.o \

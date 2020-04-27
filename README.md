@@ -11,8 +11,8 @@ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certifi
 ```
 - Edit dev/config.h as you need.
 - Compile:
--- epoll is an linux based nonblocking single thread server. 
---  make_shared is a platform and socket independent solution, actually built with a go based https socket.
+- - epoll is an linux based nonblocking single thread server. 
+- -  make_shared is a platform and socket independent solution, actually built with a go based https socket.
 ```sh
 ./compile_http_epoll.sh
 #or
@@ -24,8 +24,8 @@ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certifi
 - OPTIONAL openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
 - Edit config.h
 - Compile:
--- kqueue is an UNIX based nonblocking single thread server. 
---  make_shared is a platform and socket independent solution, actually built with a go based https socket.
+- - kqueue is an UNIX based nonblocking single thread server. 
+- - make_shared is a platform and socket independent solution, actually built with a go based https socket.
 ```sh
 ./compile_http_kqueue.sh
 #or
@@ -50,7 +50,7 @@ In dev/db there is a db_init.sh file, use that to create my demo schema. In real
 - management: This directory stores helper scripts for updating and clearing your repository. WARNING! store your code before you run, this maybe not stable
 - - update.sh: I guess you understand...
 - - unstable_update.sh: updates git projects included to my project
-- - init_empty_project.sh : please make sure you understand the topology and compiler errors.
+- - init_empty_project.sh : please make sure you understand the topology and compiler errors. Some manual steps needed.
 
 ## Create route:
 - Check the controllercall() function in dev/routing/ and you will see how to add new routes.
