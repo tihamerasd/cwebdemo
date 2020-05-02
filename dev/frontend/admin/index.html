@@ -1,0 +1,114 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Admin Posts</title>
+
+        <link rel="stylesheet" href="/admin/font-awesome.min.css">
+        <link rel="stylesheet" href="/admin/site.css">
+        <link rel="stylesheet" href="/admin/richtext.min.css">
+        <script type="text/javascript" src="/admin/jquery.min.js"></script>
+        <script type="text/javascript" src="/admin/jquery.richtext.min.js"></script>
+
+
+
+    </head>
+    <body>
+<h1 style="text-align: center">Welcome in the Admin section!</h1>
+<p style="text-align: center">edit your posts here</p>
+<div class="page-wrapper box-content">
+<div style="display: inline-flex;">
+<br> <input id="SAVE" type="button" value="SAVE"/>
+<br> Password:<input id="password" type="password" value=""/>
+Tittle_HUN: <input id ="tittle_HUN" type="text" name="tittle_hun"><br>
+Tittle_EN: <input id ="tittle_EN" type="text" name="tittle_en"><br>
+<p>Categories:</p>
+<select id="categorybox">
+  <option value="Security">Security</option>
+  <option value="CTF">CTF</option>
+  <option value="Linux">Linux</option>
+</select>
+		</div>
+<div>
+	<br>
+	Edit button gets the content in edition box, save it again with SAVE. <br>
+Post Name:<input id ="editname" type="text" name="editname"><br>
+<input id="EDIT" type="button" value="EDIT"/>
+<input id="DELETE" type="button" value="DELETE"/>
+
+</div>
+		<div id="huncontent">
+			<h2>Content_HUN:</h2>
+            <textarea id="richtext_hun"class="content" name="richtext_hun"></textarea>
+        </div>
+
+		<div id="encontent">
+			<h2>Content_ENG:</h2>
+            <textarea id="richtext_eng" class="content" name="richtext_eng"></textarea>
+        </div>
+        
+        <script>
+        $(document).ready(function() {
+            $('#richtext_hun').richText();
+            $('#richtext_eng').richText();
+        });
+
+        document.getElementById("SAVE").onclick = function () {
+			var content_eng = document.getElementsByClassName("richText-editor")[1].innerHTML;
+			var content_hun = document.getElementsByClassName("richText-editor")[0].innerHTML;
+			var title_hun = document.getElementById("tittle_HUN").value;
+			var title_en = document.getElementById("tittle_EN").value;
+			var category= $("#categorybox option:selected").text();
+			var pw = document.getElementById("password").value;
+			$.ajax({
+				type: 'POST',    
+				url:'/admin/save',
+				headers: { 'Authentication': pw },
+				data:"title_hun=" + btoa(title_hun) + "&title_en=" + btoa(title_en) + "&category=" + category
+					+ "&content_hun=" + btoa(content_hun) + "&content_eng=" + btoa(content_eng),
+				success: function(msg){
+				alert('Return: ' + msg);
+				document.getElementById("password").value="";
+    }
+});
+			};
+
+			        document.getElementById("EDIT").onclick = function () {
+			var updatethis = document.getElementById("editname").value;
+			var pw = document.getElementById("password").value;
+			$.ajax({
+				type: 'POST',    
+				url:'/admin/update',
+				headers: { 'Authentication': pw },
+				data:"title=" + updatethis,
+				success: function(msg){
+				var json = msg;
+				console.log(json);
+				document.getElementById("tittle_EN").value=atob(json["title_EN"]);
+				document.getElementById("tittle_HUN").value=atob(json["title_HUN"]);
+				document.getElementsByClassName("richText-editor")[1].innerHTML=atob(json["content_EN"]);
+				document.getElementsByClassName("richText-editor")[0].innerHTML=atob(json["content_HUN"]);
+				$('#categorybox').val(atob(json["category"]));
+				document.getElementById("password").value="";
+    }
+});
+			};
+
+			        document.getElementById("DELETE").onclick = function () {
+			var deletethis = document.getElementById("editname").value;
+			var pw = document.getElementById("password").value;
+			$.ajax({
+				type: 'POST',    
+				url:'/admin/delete',
+				headers: { 'Authentication': pw },
+				data:"title=" + deletethis,
+				success: function(msg){
+				alert('Return: ' + msg);
+				document.getElementById("password").value="";
+    }
+});
+			};
+
+        </script>
+
+    </body>
+</html>

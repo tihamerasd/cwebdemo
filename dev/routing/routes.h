@@ -21,6 +21,8 @@ sds listincategoryroute(void);
 sds saveroute(void);	
 sds rootroute(void);	
 sds ifconfigroute(void);	
-sds languageroute(void);	
+sds languageroute(void);
+sds updateroute(void);
+sds deleteroute(void);
 
 #endif

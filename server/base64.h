@@ -89,7 +89,7 @@ char* base64( const void* binaryData, int len, int *flen )
   return res ;
 }
 
-unsigned char* unbase64( const char* ascii, int len, int *flen )
+char* unbase64( const char* ascii, int len, int *flen )
 {
   const unsigned char *safeAsciiPtr = (const unsigned char*)ascii ;
   unsigned char *bin ;
@@ -107,7 +107,8 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
   if( safeAsciiPtr[ len-2 ]=='=' )  ++pad ;
   
   *flen = 3*len/4 - pad ;
-  bin = (unsigned char*)malloc( *flen ) ;
+  bin = (unsigned char*)malloc( (*flen) + 1 ) ;
+  memset(bin, 0, *flen);
   if( !bin )
   {
     puts( "ERROR: unbase64 could not allocate enough memory." ) ;
@@ -144,7 +145,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     bin[cb++] = (A<<2) | (B>>4) ;
   }
   
-  return bin ;
+  return (char*) bin ;
 }
 
 #endif

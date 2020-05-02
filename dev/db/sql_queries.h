@@ -15,5 +15,7 @@ void select_by_name_en(char*);
 void select_by_category_en(char*);	
 void select_top5_by_category_en(char*);	
 void select_top5_by_category_hu(char*);
+void select_top1_by_name(char* title);
+void delete_post(sds title);
 
 #endif

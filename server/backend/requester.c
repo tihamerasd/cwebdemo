@@ -156,9 +156,41 @@ int my_url_callback(http_parser *_, const char *at, size_t len){
 /*callback for body parsing*/
 int on_body(http_parser *_, const char *at, size_t len){
 	sds s = sdsnewlen(at,len);
-	//urlparser(s, len); //TODO value parser almost the same like get param parsing without the '?' sign handler
-						 //POST is relatively rare, parse it on
 	threadlocalhrq.rawbody=s;
+//TODO copy pasted from get, create a function for this
+// 2 modifications, "return 0;" vs "return" and and the variable initialization
+int i = 0;
+char *url = (char*) at;
+
+	while(i<len){
+	char* separator=&(url[i]);
+	int actuallen=i;
+
+	while( i<len && url[i]!='='){
+		i++;
+		}
+
+	if(threadlocalhrq.bodycount>=MAX_LIST_LENGTH-2) {puts("segfault here solved!\n"); return 0; }
+
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdsempty();
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdsempty();
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key = sdscatlen(
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].key, separator, i-actuallen);
+	
+
+	i++;
+	separator=&(url[i]);
+	actuallen=i;
+	while( i<len && url[i]!='&'){
+		i++;
+		}
+	threadlocalhrq.req_body[threadlocalhrq.bodycount].value = sdscatlen(
+															threadlocalhrq.req_body[threadlocalhrq.bodycount].value,
+															separator, i-actuallen);
+	threadlocalhrq.bodycount++;
+	//printf("get_counter: %d\n", threadlocalhrq.bodycount);
+	i++;
+	}
 return 0;
 }
 
@@ -189,7 +221,7 @@ void create_request(sds raw_req){
 	settings.on_header_field = on_header_field;
 	settings.on_header_value = on_header_value;
 	//settings.on_headers_complete = on_headers_complete;
-	//settings.on_body = on_body;
+	settings.on_body = on_body;
 
 	http_parser *parser = malloc(sizeof(http_parser));
 	http_parser_init(parser, HTTP_REQUEST);

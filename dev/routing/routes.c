@@ -1,4 +1,5 @@
 #include "routes.h"
+#include "../../server/base64.h"
 
 char* okcode ="HTTP/1.1 200 OK\r\n";
 
@@ -138,9 +139,11 @@ sds listincategoryroute(void){
 }
 
 sds saveroute(void){
+	int authentication_exist = 0;
 	//check authetntication
 	for(int i=0; i<threadlocalhrq.headercount; i++){
 		if(strcmp(threadlocalhrq.req_headers[i].key,"Authentication")==0) {
+			authentication_exist = 1;
 			//GET the hash from http
 			unsigned char md[SHA512_DIGEST_LENGTH]; // 32 bytes
 			void * pw_from_header = (void*) threadlocalhrq.req_headers[i].value;
@@ -157,46 +160,47 @@ sds saveroute(void){
 			//read from file, so if the file length <255 no overflow
 			char pwbuff[255];
 			memset(pwbuff,0,254);
-			fp = fopen("backend/password.txt", "r");
+			fp = fopen("./dev/db/password.txt", "r");
 			fscanf(fp, "%s", pwbuff);
 			fclose(fp);
-			if (strcmp(pwbuff, stored_pw_from_header) != 0) return sdsnew("BAD PASSWORD");
+			if (strcmp(pwbuff, stored_pw_from_header) != 0) return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nBAD PASSWORD");
 		}
 	}
-///admin/save?title_hun=huntitle&title_en=entitle&category=Security&content_hun=huncontetn%3Cbr%3E&content_eng=huncontetn%3Cbr%3E
+	if (authentication_exist == 0) return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nPLEASE AUTHENTICATE");
+//TODO decoded base64 \0 byte cause error
 	char* content_hun=NULL;
 	char* content_en=NULL;
-	sds title_hun = NULL;
-	sds title_en = NULL;
+	char* title_hun = NULL;
+	char* title_en = NULL;
 	sds category = NULL;
+	//TODO DO function for getting a  GET/POST variable
 	for(int i=0; i<threadlocalhrq.bodycount; i++){
+		printf(" BASE64 KEYVALUEPAIRS: %s: %s\n", threadlocalhrq.req_body[i].key, threadlocalhrq.req_body[i].value);
+		int b64_len =sdslen(threadlocalhrq.req_body[i].value);
+		int b64_decoded_len = 0;
 		if (strcmp(threadlocalhrq.req_body[i].key,"content_hun") == 0){
-			content_hun = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
-			percent_decode(content_hun,threadlocalhrq.req_body[i].value);
+			content_hun = unbase64(threadlocalhrq.req_body[i].value, b64_len, &b64_decoded_len);
+			printf("KEYVALUEPAIRS: %s: %s\n", threadlocalhrq.req_body[i].key, content_hun);
 			continue;
 		}
 
 		if (strcmp(threadlocalhrq.req_body[i].key,"content_eng") == 0){
-			content_en = malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
-			percent_decode(content_en,threadlocalhrq.req_body[i].value);
+			content_en=unbase64(threadlocalhrq.req_body[i].value, b64_len, &b64_decoded_len);
+			printf("KEYVALUEPAIRS: %s: %s\n", threadlocalhrq.req_body[i].key, content_en);
 			continue;
 		}
 		
 		if (strcmp(threadlocalhrq.req_body[i].key,"title_hun") == 0){
-			char* decodedtitle= malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
-			memset(decodedtitle,0, sdslen(threadlocalhrq.req_body[i].value));
-			percent_decode(decodedtitle,threadlocalhrq.req_body[i].value);
-			title_hun=sdsnew(decodedtitle);
-			free(decodedtitle);
+			title_hun= unbase64(threadlocalhrq.req_body[i].value, b64_len, &b64_decoded_len);
+			printf("KEYVALUEPAIRS: %s: %s\n", threadlocalhrq.req_body[i].key, title_hun);
 			continue;
 		}
 
 		if (strcmp(threadlocalhrq.req_body[i].key,"title_en") == 0){
-			char* decodedtitle2= malloc(sdslen(threadlocalhrq.req_body[i].value)+1);
-			memset(decodedtitle2,0, sdslen(threadlocalhrq.req_body[i].value));
-			percent_decode(decodedtitle2,threadlocalhrq.req_body[i].value);
-			title_en=sdsnew(decodedtitle2);
-			free(decodedtitle2);
+			title_en = unbase64(threadlocalhrq.req_body[i].value, b64_len, &b64_decoded_len);
+			init_callback_sql();
+			delete_post(title_en);
+			free_callback_sql();
 			continue;
 		}
 		
@@ -206,11 +210,13 @@ sds saveroute(void){
 		}
 		
 	}
+	init_callback_sql();
 	insert_post(title_hun, title_en, category, content_hun, content_en);
+	free_callback_sql();
 	free(content_en);
 	free(content_hun);
-	sdsfree(title_en);
-	sdsfree(title_hun);
+	free(title_en);
+	free(title_hun);
 	sdsfree(category);
 
 	//reset the cache
@@ -222,7 +228,7 @@ sds saveroute(void){
 	pthread_mutex_unlock(&cache_locker_mutex);
 
 
-return sdsnew("Saved! Yaay, Backend C u! :)");
+return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nSaved! Yaay, Backend C u! :)");
 	}
 
 /*route for the index page*/
@@ -315,28 +321,6 @@ sds rootroute(void){
 	return  response;
 	}
 
-sds ifconfigroute(void){
-	sds response = setresponsecode(okcode); //means HTTP/1.1 200 OK
-	addheader(&response, "Connection", "close");
-	addheader(&response, "Content-Type", "text/html");
-	addheadersdone(&response);
-	//FILE *fp = popen("ifconfig lo "
-	//FILE *fp = popen("ifconfig wlan0 "
-	FILE *fp = popen("ifconfig eth0 "
-					 "| grep 'inet' "
-					 "| cut -d: -f2 "
-					 "| awk '{print $2}' "
-					 "|tr -s \"\n\"","r");
-	char ipaddr[100];
-	memset(ipaddr, 0, sizeof(ipaddr));
-	fread(ipaddr, 1, sizeof(ipaddr),fp);
-	response=sdscat(response,"<h1>My public ip is: ");
-	response=sdscat(response,ipaddr);
-	response=sdscat(response, "</h1>");
-	fclose(fp);
-	return response;
-	}
-
 sds languageroute(void){
 	char* urldecoded=NULL;
 	sds lang=sdsnew("lang");
@@ -361,12 +345,119 @@ sds languageroute(void){
 	return response;
 	}
 
+sds updateroute(void){
+	//TODO create authenticate function
+	int authentication_exist = 0;
+	//check authetntication
+	for(int i=0; i<threadlocalhrq.headercount; i++){
+		if(strcmp(threadlocalhrq.req_headers[i].key,"Authentication")==0) {
+			authentication_exist = 1;
+			//GET the hash from http
+			unsigned char md[SHA512_DIGEST_LENGTH]; // 32 bytes
+			void * pw_from_header = (void*) threadlocalhrq.req_headers[i].value;
+			simpleSHA512(pw_from_header, sdslen(pw_from_header), md);
+
+			char stored_pw_from_header[(SHA512_DIGEST_LENGTH*2)+1]; //array vs ptr type bypass, fixme later...
+			stored_pw_from_header[SHA512_DIGEST_LENGTH*2]='\0'; 
+			for (int j = 0; j < SHA512_DIGEST_LENGTH; j++) {
+				sprintf(&stored_pw_from_header[j*2], "%02x", md[j]);
+				}
+
+			//get the hash from FILE
+			FILE *fp;
+			//read from file, so if the file length <255 no overflow
+			char pwbuff[255];
+			memset(pwbuff,0,254);
+			fp = fopen("./dev/db/password.txt", "r");
+			fscanf(fp, "%s", pwbuff);
+			fclose(fp);
+			if (strcmp(pwbuff, stored_pw_from_header) != 0) return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nBAD PASSWORD");
+		}
+	}
+	if (authentication_exist == 0) return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nPLEASE AUTHENTICATE");
+
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+		if (strcmp(threadlocalhrq.req_body[i].key,"title") == 0){
+			init_callback_sql();
+			fwrite(threadlocalhrq.req_body[i].value, sdslen(threadlocalhrq.req_body[i].value), 1, stdout);
+			fflush(stdout);
+			puts("\n");
+			select_top1_by_name(threadlocalhrq.req_body[i].value);
+			break;
+		}
+	}
+	sds response = sdsnew("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{");
+	int flen =0;
+	for (int i=0; i<5; i++){
+		if (kvp_array_sqldata[i].key==NULL || kvp_array_sqldata[i].value == NULL){
+			free_callback_sql();
+			sdsfree(response);
+			return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nProbably not found, but maybe other error!");
+		}
+		response = sdscat(response,"\"");
+		response = sdscatsds(response,kvp_array_sqldata[i].key);
+		response = sdscat(response,"\":\"");
+		char* b64_value = base64(kvp_array_sqldata[i].value, sdslen(kvp_array_sqldata[i].value), &flen);
+		response = sdscatlen(response,b64_value, flen);
+		response = sdscat(response,"\",");
+		if (i==4) response[sdslen(response)-1] = '}';
+		free(b64_value);
+	}
+	
+	free_callback_sql();
+	return response;
+}
+
+sds deleteroute(void){
+	//TODO create authenticate function
+	int authentication_exist = 0;
+	//check authetntication
+	for(int i=0; i<threadlocalhrq.headercount; i++){
+		if(strcmp(threadlocalhrq.req_headers[i].key,"Authentication")==0) {
+			authentication_exist = 1;
+			//GET the hash from http
+			unsigned char md[SHA512_DIGEST_LENGTH]; // 32 bytes
+			void * pw_from_header = (void*) threadlocalhrq.req_headers[i].value;
+			simpleSHA512(pw_from_header, sdslen(pw_from_header), md);
+
+			char stored_pw_from_header[(SHA512_DIGEST_LENGTH*2)+1]; //array vs ptr type bypass, fixme later...
+			stored_pw_from_header[SHA512_DIGEST_LENGTH*2]='\0'; 
+			for (int j = 0; j < SHA512_DIGEST_LENGTH; j++) {
+				sprintf(&stored_pw_from_header[j*2], "%02x", md[j]);
+				}
+
+			//get the hash from FILE
+			FILE *fp;
+			//read from file, so if the file length <255 no overflow
+			char pwbuff[255];
+			memset(pwbuff,0,254);
+			fp = fopen("./dev/db/password.txt", "r");
+			fscanf(fp, "%s", pwbuff);
+			fclose(fp);
+			if (strcmp(pwbuff, stored_pw_from_header) != 0) return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nBAD PASSWORD");
+		}
+	}
+	if (authentication_exist == 0) return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nPLEASE AUTHENTICATE");
+
+	for(int i=0; i<threadlocalhrq.bodycount; i++){
+		if (strcmp(threadlocalhrq.req_body[i].key,"title") == 0){
+			init_callback_sql();
+			//TODO percent decode or POST?
+			delete_post(threadlocalhrq.req_body[i].value);
+			free_callback_sql();
+			break;
+		}
+	}
+
+	return sdsnew("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nI tried to delete Check what happened...");
+}
 /*register the routes here*/
 void controllercall(void){
 	create_route("listincategory", &listincategoryroute);
 	create_route("", &rootroute);
 	create_route("admin/save", &saveroute);
+	create_route("admin/delete", &deleteroute);
+	create_route("admin/update", &updateroute);
 	create_route("onepost", &onepostroute);
-	create_route("ifconfig", &ifconfigroute);
 	create_route("language", &languageroute);
 }

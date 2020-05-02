@@ -1,0 +1,47 @@
+#!/bin/path/to/my_interpreter
+
+// "//"means line comment
+
+[[start_config]] // Config blocks starts, no programcode available here, just define static options
+define PORT 443
+define CERTFILE path/to/cert.pem
+define KEYFILE path/to/key.pem
+rawc #include "dirtyheader.h" //compile against me too
+[end_config]
+
+[[start_startup]] //runs only once in main
+var test = "test"
+var num = 0
+rawc if (num = (void*)test == NULL) exit(0); //ofc never null, just for demo, feel free to use rawc anywhere if you know what you are doing
+rawc //trickyrawc
+rawc for(int i=0; i<10; i++){
+call strcmp "test\0blablabla" "test"//gives true 10x
+rawc }
+[[end_startup]]
+
+[[Runtime]] //the normal behaviour after initialization
+
+[route /]
+call add_200_code
+call add_default_headers
+call get_getvar "test" store in var getparam //means from /?test=foo foo will be stored in getparam. Alloc the string, free is done at [end_route]
+var getparam = ""
+call get_getvar "test2" storte in getparam //if var is already exsists, this means calling free before declaration,
+
+render index.html //index.html is a template file
+if getparam is "thisisthecalue" then block_start
+call setflatevar "param_name" "param value"
+block_end
+
+[end_route]
+
+[route /admin]
+call add_404_code
+call add_defaultheaders
+call add_header "First param" "Second param" //means First param: Second param in http headers
+call headersdone 
+
+call addcontent "This is a static page!"
+[end_route]
+
+[[end_runtime]]

@@ -125,3 +125,35 @@ void select_top5_by_category_en(char* tittle){
     
     sqlite3_free(sql);
 	}
+
+/*delete an article from the admin page to the database*/
+void delete_post(sds title){
+	char *sql = sqlite3_mprintf(
+	"DELETE from posts where title_EN='%q' or title_HUN='%q';",title, title);   
+    int rc = sqlite3_exec(db, sql, 0, 0, &mysql_err_msg);
+    if (rc != SQLITE_OK ) {  
+        fprintf(stderr, "Failed to select data\n");
+        fprintf(stderr, "SQL error: %s\n", mysql_err_msg);
+         puts("ERROR: Save FAIL!\n");
+        sqlite3_free(mysql_err_msg);
+        sqlite3_free(sql);
+        return;
+    }
+    puts("Delete success!\n");
+    sqlite3_free(sql);
+	}
+
+	/*Select the articles by category*/
+void select_top1_by_name(char* title){
+	char *sql = sqlite3_mprintf("SELECT title_EN,category,content_EN,title_HUN,content_HUN FROM posts WHERE title_HUN='%q' or title_EN='%q' ORDER BY date(created_at) DESC LIMIT 1;", title, title);   
+    int rc = sqlite3_exec(db, sql, callback, 0, &mysql_err_msg);
+    if (rc != SQLITE_OK ) {  
+        fprintf(stderr, "Failed to select data\n");
+        fprintf(stderr, "SQL error: %s\n", mysql_err_msg);
+        sqlite3_free(mysql_err_msg);
+        sqlite3_free(sql);
+        return;
+    }
+    
+    sqlite3_free(sql);
+	}

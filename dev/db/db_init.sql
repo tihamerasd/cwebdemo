@@ -1,3 +1,4 @@
+PRAGMA encoding="UTF-8";
 drop table if exists posts;
 	CREATE TABLE posts (
 	id INTEGER PRIMARY KEY autoincrement,
